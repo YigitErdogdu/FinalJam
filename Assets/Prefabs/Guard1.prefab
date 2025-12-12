@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 5ad6a3f2a937a9247827b05342d97c5a, type: 2}
     - target: {fileID: 919132149155446097, guid: a0b3c302f83341242a8180f52e707684, type: 3}
       propertyPath: m_Name
-      value: Cyborg_Sentinel_1212013450_texture
+      value: Guard1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

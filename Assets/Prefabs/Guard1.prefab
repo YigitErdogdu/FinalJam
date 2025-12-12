@@ -81,3 +81,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc85b5680b5955047a49bbaa5fc08941, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardFollow
+  targetCharacter: {fileID: 0}
+  followDistance: 2
+  sideOffset: 1
+  sideDistance: 1.5
+  moveSpeed: 3
+  rotationSpeed: 5
+  useNavMesh: 1

@@ -205,13 +205,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 193799572}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.011080525, y: 0.59956443, z: -0.00830221, w: 0.8002068}
-  m_LocalPosition: {x: 0, y: 3.11, z: -16.4}
+  m_LocalRotation: {x: -0.11044414, y: -0.5336571, z: 0.07048853, w: -0.8354901}
+  m_LocalPosition: {x: 2.4125938, y: 5.290414, z: -15.897242}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 1.587, y: 73.686, z: 0}
+  m_LocalEulerAnglesHint: {x: 4.595, y: 62.605, z: -4.068}
 --- !u!114 &193799576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -401,6 +401,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &710404685 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: c682f7559b08e8f4bb1004c299c6f897, type: 3}
+  m_PrefabInstance: {fileID: 1498533214}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1036343253
 GameObject:
   m_ObjectHideFlags: 0
@@ -528,6 +533,53 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1491008765
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1491008767}
+  - component: {fileID: 1491008766}
+  m_Layer: 0
+  m_Name: ElectionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1491008766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491008765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8efcef0eac8e9748ab7679bd325c3e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemSelection
+  items:
+  - {fileID: 2003494677}
+  - {fileID: 710404685}
+--- !u!4 &1491008767
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491008765}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 20.25534, y: 0, z: -7.62866}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1498533214
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -739,10 +791,16 @@ PrefabInstance:
       value: "collessium_d\xFC\u015F\xFCr\xFClm\xFC\u015F"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 65702495048144492, guid: 20372a55420575140ae47d9324ff6bbd, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 20372a55420575140ae47d9324ff6bbd, type: 3}
+--- !u!1 &2003494677 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7064588541486432289, guid: dd3bb7cef711fa344bd6e9464b36b833, type: 3}
+  m_PrefabInstance: {fileID: 2038194737}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2038194737
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -818,3 +876,4 @@ SceneRoots:
   - {fileID: 556770338}
   - {fileID: 1535252330}
   - {fileID: 274395394}
+  - {fileID: 1491008767}

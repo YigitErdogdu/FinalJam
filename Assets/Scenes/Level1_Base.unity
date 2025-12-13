@@ -447,15 +447,15 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: 919132149155446097, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: m_Name
       value: tires2 (7)
@@ -3313,15 +3313,15 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: 919132149155446097, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: m_Name
       value: tires2 (23)
@@ -3743,15 +3743,15 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: -7511558181221131132, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: 'm_Materials.Array.data[2]'
       value: 
-      objectReference: {fileID: 2100000, guid: a58b617fd6e2e834bb8a336dd301672a, type: 2}
+      objectReference: {fileID: 2100000, guid: 5ddb1f0eeeffe0f4eaff4bd63a1017e7, type: 2}
     - target: {fileID: 919132149155446097, guid: 497cd177eaf41a2488324117c0e95d9e, type: 3}
       propertyPath: m_Name
       value: tires2 (8)
@@ -4330,7 +4330,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: af07df965c4ac494abfb4b36933521af, type: 2}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

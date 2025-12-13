@@ -91,8 +91,8 @@ public class PlayerCombat : MonoBehaviour
         // Sıradaki animasyon için index'i artır (0 -> 1 -> 2 -> 0)
         currentAttackIndex = (currentAttackIndex + 1) % 3;
         
-        // Root Motion'ı aktif et (eğer saldırı animasyonunda hareket varsa)
-        animator.applyRootMotion = true;
+        // Root Motion'ı KAPAT - saldırı sırasında normal hareket devam etsin
+        animator.applyRootMotion = false;
         
         // Animasyon state'inin değişmesini bekle
         yield return null;
@@ -150,7 +150,7 @@ public class PlayerCombat : MonoBehaviour
         
         // Saldırı bitti
         isAttacking = false;
-        animator.applyRootMotion = false;
+        // Root motion zaten kapalı, tekrar kapatmaya gerek yok
     }
 
     void DealDamage()

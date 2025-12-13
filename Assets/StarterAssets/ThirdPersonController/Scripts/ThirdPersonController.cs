@@ -16,17 +16,17 @@ namespace StarterAssets
     {
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
-        public float MoveSpeed = 2.0f;
+        public float MoveSpeed = 200.0f;
 
         [Tooltip("Sprint speed of the character in m/s")]
-        public float SprintSpeed = 5.335f;
+        public float SprintSpeed = 350.0f;
 
         [Tooltip("How fast the character turns to face movement direction")]
         [Range(0.0f, 0.3f)]
-        public float RotationSmoothTime = 0.12f;
+        public float RotationSmoothTime = 0.05f; // Daha akıcı dönüş için düşürüldü
 
         [Tooltip("Acceleration and deceleration")]
-        public float SpeedChangeRate = 10.0f;
+        public float SpeedChangeRate = 50.0f;
 
         public AudioClip LandingAudioClip;
         public AudioClip[] FootstepAudioClips;
@@ -83,7 +83,7 @@ namespace StarterAssets
         private float _speed;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
-        private float _rotationVelocity;
+        private float _rotationVelocity = 0f; // Başlangıç değeri eklendi
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
 
@@ -152,9 +152,43 @@ namespace StarterAssets
             _input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM 
             _playerInput = GetComponent<PlayerInput>();
+            
+            // Debug: Input System kontrolü
+            if (_playerInput == null)
+            {
+                Debug.LogError("❌ ThirdPersonController: PlayerInput component bulunamadı!");
+            }
+            else if (_playerInput.actions == null)
+            {
+                Debug.LogError("❌ ThirdPersonController: PlayerInput.actions NULL! Input Action Asset atanmamış!");
+            }
+            else
+            {
+                Debug.Log($"✅ ThirdPersonController: PlayerInput ve Actions Asset bulundu.");
+            }
 #else
 			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
+
+            // Debug: Component kontrolü
+            if (_controller == null)
+            {
+                Debug.LogError("❌ ThirdPersonController: CharacterController bulunamadı!");
+            }
+            
+            if (_input == null)
+            {
+                Debug.LogError("❌ ThirdPersonController: StarterAssetsInputs bulunamadı!");
+            }
+            
+            if (_mainCamera == null)
+            {
+                Debug.LogError("❌ ThirdPersonController: MainCamera tag'li kamera bulunamadı!");
+            }
+            else
+            {
+                Debug.Log($"✅ ThirdPersonController: MainCamera bulundu: {_mainCamera.name}");
+            }
 
             AssignAnimationIDs();
 
@@ -244,6 +278,13 @@ namespace StarterAssets
         {
             // Rolling sırasında hareket etme
             if (_isRolling) return;
+            
+            // Debug: Input kontrolü
+            if (_input == null)
+            {
+                Debug.LogError("❌ Move(): _input NULL!");
+                return;
+            }
 
             // set target speed based on move speed, sprint speed and if sprint is pressed
             float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
@@ -253,6 +294,8 @@ namespace StarterAssets
             // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is no input, set the target speed to 0
             if (_input.move == Vector2.zero) targetSpeed = 0.0f;
+            
+            // Debug mesajlarını kaldırdık (performans için)
 
             // a reference to the players current horizontal velocity
             float currentHorizontalSpeed = new Vector3(_controller.velocity.x, 0.0f, _controller.velocity.z).magnitude;
@@ -293,11 +336,39 @@ namespace StarterAssets
                 // playerModel varsa onu kullan, yoksa transform kullan
                 Transform rotationTarget = playerModel != null ? playerModel : transform;
                 
-                float rotation = Mathf.SmoothDampAngle(rotationTarget.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                    RotationSmoothTime);
+                float currentAngle = rotationTarget.eulerAngles.y;
+                float angleDiff = Mathf.DeltaAngle(currentAngle, _targetRotation);
+                
+                // Daha akıcı dönüş için: Hızlı hareket ederken daha hızlı dön
+                float rotationSpeedMultiplier = 1f;
+                if (_speed > MoveSpeed * 0.5f) // Hızlı hareket ediyorsa
+                {
+                    rotationSpeedMultiplier = 1.5f; // Dönüşü %50 hızlandır
+                }
+                
+                // Çok büyük açı farklarında daha hızlı dön (180 derece dönüşler için)
+                if (Mathf.Abs(angleDiff) > 120f)
+                {
+                    rotationSpeedMultiplier *= 2f; // 2x daha hızlı
+                    _rotationVelocity = 0f; // Velocity'yi resetle
+                }
+                else if (Mathf.Abs(angleDiff) > 90f)
+                {
+                    rotationSpeedMultiplier *= 1.5f;
+                }
+                
+                // SmoothDampAngle ile akıcı dönüş
+                float adjustedSmoothTime = RotationSmoothTime / rotationSpeedMultiplier;
+                float rotation = Mathf.SmoothDampAngle(currentAngle, _targetRotation, ref _rotationVelocity,
+                    adjustedSmoothTime);
 
                 // rotate to face input direction relative to camera position
                 rotationTarget.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+            }
+            else
+            {
+                // Input yoksa rotation velocity'yi yavaşça sıfırla (ani durmayı önler)
+                _rotationVelocity = Mathf.Lerp(_rotationVelocity, 0f, Time.deltaTime * 5f);
             }
 
 
@@ -318,7 +389,9 @@ namespace StarterAssets
             // update animator if using character
             if (_hasAnimator)
             {
-                _animator.SetFloat(_animIDSpeed, _animationBlend);
+                // Sprint için daha yüksek Speed değeri gönder (animator sprint animasyonunu tetiklesin)
+                float animatorSpeed = _input.sprint ? _animationBlend * 1.5f : _animationBlend;
+                _animator.SetFloat(_animIDSpeed, animatorSpeed);
                 _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
             }
         }

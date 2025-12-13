@@ -27,7 +27,6 @@ public class CharacterAutoWalk : MonoBehaviour
     private NavMeshAgent navAgent;
     private Animator animator;
     private int currentWaypointIndex = 0;
-    private bool isMoving = false;
     private float startYPosition;
     
     void Start()
@@ -143,13 +142,10 @@ public class CharacterAutoWalk : MonoBehaviour
                     {
                         animator.SetFloat("Speed", walkSpeed);
                     }
-                    
-                    isMoving = true;
                 }
                 else
                 {
                     // Waypoint'e ulaşıldı, bir sonrakine geç
-                    isMoving = false;
                     MoveToNextWaypoint();
                 }
             }
@@ -190,12 +186,9 @@ public class CharacterAutoWalk : MonoBehaviour
                 {
                     animator.SetFloat("Speed", walkSpeed);
                 }
-                
-                isMoving = true;
             }
             else
             {
-                isMoving = false;
                 if (animator != null)
                 {
                     animator.SetFloat("Speed", 0f);

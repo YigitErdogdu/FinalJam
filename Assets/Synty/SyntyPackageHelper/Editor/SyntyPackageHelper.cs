@@ -43,7 +43,7 @@ public class SyntyPackageHelper
             }
         }
 
-        Debug.Log($"Loaded {configs.Count} ExamplePackConfig assets");
+        // Debug.Log($"Loaded {configs.Count} ExamplePackConfig assets"); // Geçici olarak devre dışı
 
         return configs.ToArray();
     }

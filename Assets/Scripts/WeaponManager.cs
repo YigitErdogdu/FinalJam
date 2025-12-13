@@ -69,4 +69,18 @@ public class WeaponManager : MonoBehaviour
             return currentWeapon.weaponType;
         return null;
     }
+    
+    // Silahları resetle (ölüm sonrası)
+    public void ResetWeapons()
+    {
+        hasPurpleWeapon = false;
+        hasWhiteWeapon = false;
+        if (currentWeaponObject != null)
+        {
+            currentWeaponObject.SetActive(false);
+        }
+        currentWeapon = null;
+        currentWeaponObject = null;
+        Debug.Log("✅ WeaponManager resetlendi. Tüm silahlar kaldırıldı.");
+    }
 }

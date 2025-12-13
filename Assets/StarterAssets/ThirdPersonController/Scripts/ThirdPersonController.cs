@@ -97,6 +97,7 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private int _animIDRolling;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -110,6 +111,15 @@ namespace StarterAssets
 
         private bool _hasAnimator;
         public Transform playerModel;
+        
+        // Rolling state
+        private bool _isRolling = false;
+        public float _rollDuration = 0.7f;
+        private float _rollTimer = 0f;
+        private Vector3 _rollDirection = Vector3.zero;
+        public float _rollSpeed = 5.0f;
+        
+
 
         private bool IsCurrentDeviceMouse
         {
@@ -151,11 +161,28 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+            
+            // PlayerHealth yoksa otomatik ekle
+            if (GetComponent<PlayerHealth>() == null)
+            {
+                gameObject.AddComponent<PlayerHealth>();
+                Debug.Log("✅ PlayerHealth otomatik olarak eklendi!");
+            }
         }
 
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);
+
+            // Ölüyse hareket etme
+            PlayerHealth playerHealth = GetComponent<PlayerHealth>();
+            if (playerHealth != null && playerHealth.IsDead())
+            {
+                return;
+            }
+
+            // Rolling kontrolü
+            HandleRolling();
 
             JumpAndGravity();
             GroundedCheck();
@@ -174,6 +201,7 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDRolling = Animator.StringToHash("Rolling");
         }
 
         private void GroundedCheck()
@@ -214,6 +242,9 @@ namespace StarterAssets
 
         private void Move()
         {
+            // Rolling sırasında hareket etme
+            if (_isRolling) return;
+
             // set target speed based on move speed, sprint speed and if sprint is pressed
             float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
 
@@ -283,8 +314,95 @@ namespace StarterAssets
             }
         }
 
+        private void HandleRolling()
+        {
+            // Rolling timer'ı güncelle
+            if (_isRolling)
+            {
+                _rollTimer += Time.deltaTime;
+                
+                // Roll sırasında kameranın baktığı yöne hareket et
+                if (_rollDirection.magnitude > 0.1f)
+                {
+                    Vector3 rollMovement = _rollDirection * _rollSpeed * Time.deltaTime;
+                    _controller.Move(rollMovement + new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+                }
+                
+                if (_rollTimer >= _rollDuration)
+                {
+                    _isRolling = false;
+                    _animator.applyRootMotion = false;
+                    _rollTimer = 0f;
+                    _rollDirection = Vector3.zero;
+                }
+                return; // Rolling sırasında başka işlem yapma
+            }
+
+            // Ctrl tuşuna basıldı mı ve yerdeyiz mi?
+            if (Input.GetKeyDown(KeyCode.LeftControl) && Grounded && !_isRolling)
+            {
+                StartRoll();
+            }
+        }
+
+        private void StartRoll()
+        {
+            _isRolling = true;
+            _rollTimer = 0f;
+            _animator.applyRootMotion = false; // Root motion'ı kapat, manuel kontrol edeceğiz
+
+            // Input direction'ı al (WASD tuşlarına göre)
+            Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            
+            Vector3 rollDirection;
+            
+            // Eğer input varsa, input'a göre kameraya göre yön hesapla
+            if (inputDirection.magnitude > 0.1f)
+            {
+                // Input direction'ı kameranın yaw açısına göre döndür
+                float targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
+                                      _mainCamera.transform.eulerAngles.y;
+                
+                rollDirection = Quaternion.Euler(0.0f, targetRotation, 0.0f) * Vector3.forward;
+            }
+            else
+            {
+                // Input yoksa, kameranın baktığı yöne git
+                rollDirection = _mainCamera.transform.forward;
+                rollDirection.y = 0;
+                rollDirection.Normalize();
+            }
+
+            // Roll yönünü kaydet
+            _rollDirection = rollDirection;
+
+            // Player'ı roll yönüne HEMEN çevir
+            if (rollDirection.magnitude > 0.1f && playerModel != null)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(rollDirection);
+                playerModel.rotation = targetRotation;
+            }
+
+            // Rolling animasyonunu tetikle
+            if (_hasAnimator)
+            {
+                _animator.SetTrigger(_animIDRolling);
+            }
+        }
+
         private void JumpAndGravity()
         {
+            // Rolling sırasında zıplama yapma
+            if (_isRolling)
+            {
+                // Sadece gravity uygula
+                if (_verticalVelocity < _terminalVelocity)
+                {
+                    _verticalVelocity += Gravity * Time.deltaTime;
+                }
+                return;
+            }
+
             if (Grounded)
             {
                 // reset the fall timeout timer

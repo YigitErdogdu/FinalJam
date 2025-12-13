@@ -45,6 +45,13 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
+        // Ölüyse saldırma
+        PlayerHealth playerHealth = GetComponent<PlayerHealth>();
+        if (playerHealth != null && playerHealth.IsDead())
+        {
+            return;
+        }
+        
         // Sol fare tuşuna basıldığında
         // Cooldown kontrolü eklendi
         bool canAttack = Time.time >= lastAttackTime + attackCooldown;
@@ -57,6 +64,12 @@ public class PlayerCombat : MonoBehaviour
 
     IEnumerator Attack()
     {
+        if (animator == null)
+        {
+            isAttacking = false;
+            yield break;
+        }
+        
         isAttacking = true;
         lastAttackTime = Time.time; // Saldırı zamanını kaydet
         
@@ -78,13 +91,53 @@ public class PlayerCombat : MonoBehaviour
         // Şimdi doğru animasyon süresini al
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         float animationLength = stateInfo.length;
+        float elapsedTime = 0f;
         
         // Animasyonun yarısında hasar ver (silah vuruş anı)
-        yield return new WaitForSeconds(animationLength * 0.5f);
+        while (elapsedTime < animationLength * 0.5f)
+        {
+            if (animator == null)
+            {
+                isAttacking = false;
+                yield break;
+            }
+            
+            // Roll yapıldı mı kontrol et
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Player roll"))
+            {
+                // Roll yapıldı, attack'ı iptal et
+                isAttacking = false;
+                animator.applyRootMotion = false;
+                yield break;
+            }
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // Hasar ver
         DealDamage();
         
         // Animasyonun geri kalanını bekle
-        yield return new WaitForSeconds(animationLength * 0.5f);
+        elapsedTime = animationLength * 0.5f;
+        while (elapsedTime < animationLength)
+        {
+            if (animator == null)
+            {
+                isAttacking = false;
+                yield break;
+            }
+            
+            // Roll yapıldı mı kontrol et
+            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Player roll"))
+            {
+                // Roll yapıldı, attack'ı iptal et
+                isAttacking = false;
+                animator.applyRootMotion = false;
+                yield break;
+            }
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
         
         // Saldırı bitti
         isAttacking = false;

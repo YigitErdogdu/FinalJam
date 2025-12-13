@@ -4,7 +4,7 @@ public class WeaponPickup : MonoBehaviour
 {
     [Header("Raycast Settings")]
     [Tooltip("Raycast mesafesi")]
-    [SerializeField] private float pickupRange = 3f;
+    [SerializeField] private float pickupRange = 5f;
     
     [Tooltip("Hangi layer'lar silah olarak algılanacak")]
     [SerializeField] private LayerMask weaponLayer;
@@ -23,6 +23,7 @@ public class WeaponPickup : MonoBehaviour
     
     private GameObject currentLookingAtWeapon;
     private WeaponManager weaponManager;
+    private GameObject lastCheckedWeapon; // Önceki frame'deki silahı hatırla
 
     void Start()
     {
@@ -54,23 +55,70 @@ public class WeaponPickup : MonoBehaviour
 
     void CheckForWeapon()
     {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("WeaponPickup: Kamera bulunamadı!");
+                return;
+            }
+        }
+        
         // Ekranın ortasından ray oluştur
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         RaycastHit hit;
         
-        // Raycast at
-        if (Physics.Raycast(ray, out hit, pickupRange, weaponLayer))
+        // Raycast at (tüm collider'lara)
+        if (Physics.Raycast(ray, out hit, pickupRange))
         {
-            // Silah mı?
-            Weapon weapon = hit.collider.GetComponent<Weapon>();
-            if (weapon != null)
+            GameObject hitObject = hit.collider.gameObject;
+            
+            // Tag kontrolü - "PurpleBlade" veya "Katana" tag'ine sahip mi?
+            bool isWeaponTag = hitObject.CompareTag("PurpleBlade") || hitObject.CompareTag("Katana");
+            
+            // Veya Weapon component'i var mı?
+            Weapon weapon = hitObject.GetComponent<Weapon>();
+            
+            // Eğer tag varsa ama Weapon component yoksa, ekle
+            if (isWeaponTag && weapon == null)
             {
-                currentLookingAtWeapon = hit.collider.gameObject;
-                Debug.Log($"Silaha bakıyorsun: {weapon.weaponName} - {pickupMessage}");
+                weapon = hitObject.AddComponent<Weapon>();
+                if (hitObject.CompareTag("PurpleBlade"))
+                {
+                    weapon.weaponType = Weapon.WeaponType.Purple;
+                    weapon.weaponName = "Purple Blade";
+                    weapon.damage = 10f;
+                    Debug.Log("✅ PurpleBlade tag'i bulundu, Weapon component eklendi!");
+                }
+                else if (hitObject.CompareTag("Katana"))
+                {
+                    weapon.weaponType = Weapon.WeaponType.White;
+                    weapon.weaponName = "Katana";
+                    weapon.damage = 100f;
+                    Debug.Log("✅ Katana tag'i bulundu, Weapon component eklendi!");
+                }
+            }
+            
+            if (isWeaponTag || weapon != null)
+            {
+                currentLookingAtWeapon = hitObject;
+                
+                // Sadece yeni bir silaha bakıldığında log yaz
+                if (lastCheckedWeapon != hitObject)
+                {
+                    string weaponName = weapon != null ? weapon.weaponName : hitObject.tag;
+                    Debug.Log($"✅ Silaha bakıyorsun: {weaponName} - {pickupMessage}");
+                    lastCheckedWeapon = hitObject;
+                }
             }
             else
             {
                 currentLookingAtWeapon = null;
+                if (lastCheckedWeapon != null)
+                {
+                    lastCheckedWeapon = null;
+                }
             }
         }
         else
@@ -81,35 +129,52 @@ public class WeaponPickup : MonoBehaviour
 
     void PickupWeapon(GameObject weaponObject)
     {
+        if (weaponObject == null)
+        {
+            Debug.LogError("WeaponPickup: Silah objesi null!");
+            return;
+        }
+        
         if (rightHand == null)
         {
-            Debug.LogError("Right Hand atanmamış!");
+            Debug.LogError("WeaponPickup: Right Hand atanmamış! Player GameObject'inde WeaponPickup script'inde Right Hand transform'unu atayın!");
             return;
         }
         
         Weapon weapon = weaponObject.GetComponent<Weapon>();
-        if (weapon == null) return;
-        
-        // WeaponManager'a bildir
-        if (weaponManager != null)
+        if (weapon == null)
         {
-            // Aynı tipte silah var mı kontrol et
-            if (!weaponManager.CanPickupWeapon(weapon.weaponType))
-            {
-                Debug.Log($"{weapon.weaponType} silahını zaten aldın!");
-                return;
-            }
-            
-            weaponManager.RegisterWeapon(weapon);
+            Debug.LogError($"WeaponPickup: {weaponObject.name} objesinde Weapon component yok!");
+            return;
         }
         
-        // Silahı sağ elin child'ı yap
-        weaponObject.transform.SetParent(rightHand);
+        // WeaponManager'a bildir
+        if (weaponManager == null)
+        {
+            weaponManager = GetComponent<WeaponManager>();
+            if (weaponManager == null)
+            {
+                Debug.LogError("WeaponPickup: WeaponManager bulunamadı! Player GameObject'ine WeaponManager script'i ekleyin!");
+                return;
+            }
+        }
         
-        // Pozisyonu sıfırla
-        weaponObject.transform.localPosition = Vector3.zero;
-        weaponObject.transform.localRotation = Quaternion.identity;
-        weaponObject.transform.localScale = Vector3.one;
+        // Aynı tipte silah var mı kontrol et
+        if (!weaponManager.CanPickupWeapon(weapon.weaponType))
+        {
+            Debug.Log($"⚠️ {weapon.weaponType} silahını zaten aldın!");
+            return;
+        }
+        
+        // Silahı kaydet
+        weaponManager.RegisterWeapon(weapon);
+        
+        // Rigidbody varsa kinematic yap (önce)
+        Rigidbody rb = weaponObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+        }
         
         // Collider'ı kapat
         Collider weaponCollider = weaponObject.GetComponent<Collider>();
@@ -118,14 +183,25 @@ public class WeaponPickup : MonoBehaviour
             weaponCollider.enabled = false;
         }
         
-        // Rigidbody varsa kinematic yap
-        Rigidbody rb = weaponObject.GetComponent<Rigidbody>();
-        if (rb != null)
+        // Silahı sağ elin child'ı yap
+        weaponObject.transform.SetParent(rightHand);
+        
+        // Pozisyonu ve rotasyonu ayarla
+        weaponObject.transform.localPosition = Vector3.zero;
+        weaponObject.transform.localRotation = Quaternion.identity;
+        weaponObject.transform.localScale = Vector3.one;
+        
+        // Silahı görünür yap
+        weaponObject.SetActive(true);
+        
+        // Renderer'ları kontrol et
+        Renderer[] renderers = weaponObject.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
         {
-            rb.isKinematic = true;
+            renderer.enabled = true;
         }
         
-        Debug.Log($"✅ {weapon.weaponName} alındı! Hasar: {weapon.damage}");
+        Debug.Log($"✅ {weapon.weaponName} başarıyla alındı! Hasar: {weapon.damage} - Pozisyon: {weaponObject.transform.position}");
         currentLookingAtWeapon = null;
     }
 

@@ -243,7 +243,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &91725491
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -772,7 +772,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 642709066}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 194174889}
+        m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
+        m_MethodName: OyundanCik
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &642709066
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2024,7 +2036,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 194174889}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-        m_MethodName: OyundanCik
+        m_MethodName: HowToPlayAc
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

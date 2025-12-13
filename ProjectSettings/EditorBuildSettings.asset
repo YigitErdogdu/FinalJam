@@ -17,6 +17,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Level1_Base.unity
     guid: 4c4f62c6e5de0a747925dbabfc20b023
+  - enabled: 1
+    path: Assets/Scenes/Level1_Base 1.unity
+    guid: 300ae47d479a649498eb5d9e8292f679
+  - enabled: 1
+    path: Assets/Scenes/Level2_Arenaa.unity
+    guid: 6d1c6eada458836459662bcb79f3256e
+  - enabled: 1
+    path: Assets/Scenes/Level3_Finale.unity
+    guid: b6a141786634d514085026e959f2ebb2
+  - enabled: 1
+    path: Assets/Scenes/GAMEOVER.unity
+    guid: 40028d8ed1525ab40a6f6e5fac90371a
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 98bbc593fc6772f44905a10cc0b4e859, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

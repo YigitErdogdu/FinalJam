@@ -5,8 +5,21 @@ using UnityEngine;
 public class PlayerCombat : MonoBehaviour
 {
     [SerializeField] private Animator animator;
+    
+    [Header("Combat Settings")]
+    [Tooltip("Saldırılar arası bekleme süresi (saniye)")]
+    [SerializeField] private float attackCooldown = 1f;
+    
+    [Tooltip("Saldırı menzili")]
+    [SerializeField] private float attackRange = 2f;
+    
+    [Tooltip("Saldırı noktası (silahın ucu)")]
+    [SerializeField] private Transform attackPoint;
+    
+    private WeaponManager weaponManager;
     private int currentAttackIndex = 0;
     private bool isAttacking;
+    private float lastAttackTime = -999f;
 
     void Start()
     {
@@ -15,22 +28,27 @@ public class PlayerCombat : MonoBehaviour
         {
             animator = GetComponent<Animator>();
         }
+
+        // WeaponManager'ı bul
+        weaponManager = GetComponent<WeaponManager>();
+        if (weaponManager == null)
+        {
+            Debug.LogWarning("WeaponManager bulunamadı! Player'a WeaponManager script'i ekleyin.");
+        }
+
+        // AttackPoint yoksa, karakterin kendisini kullan
+        if (attackPoint == null)
+        {
+            attackPoint = transform;
+        }
     }
 
     void Update()
     {
-        // Defans kontrolü (Ctrl tuşu) - Saldırı yaparken defans yapamaz
-        if (Input.GetKey(KeyCode.LeftControl) && !isAttacking)
-        {
-            animator.SetBool("IsDefending", true);
-        }
-        else
-        {
-            animator.SetBool("IsDefending", false);
-        }
-
-        // Sol fare tuşuna basıldığında - Defans yaparken saldırı yapamaz
-        if (Input.GetMouseButtonDown(0) && !isAttacking && !Input.GetKey(KeyCode.LeftControl))
+        // Sol fare tuşuna basıldığında
+        // Cooldown kontrolü eklendi
+        bool canAttack = Time.time >= lastAttackTime + attackCooldown;
+        if (Input.GetMouseButtonDown(0) && !isAttacking && canAttack)
         {
             StartCoroutine(Attack());
         }
@@ -40,6 +58,7 @@ public class PlayerCombat : MonoBehaviour
     IEnumerator Attack()
     {
         isAttacking = true;
+        lastAttackTime = Time.time; // Saldırı zamanını kaydet
         
         // AttackIndex float değerini ayarla
         animator.SetFloat("AttackIndex", currentAttackIndex);
@@ -60,11 +79,44 @@ public class PlayerCombat : MonoBehaviour
         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
         float animationLength = stateInfo.length;
         
-        // Animasyon bitene kadar bekle
-        yield return new WaitForSeconds(animationLength);
+        // Animasyonun yarısında hasar ver (silah vuruş anı)
+        yield return new WaitForSeconds(animationLength * 0.5f);
+        DealDamage();
+        
+        // Animasyonun geri kalanını bekle
+        yield return new WaitForSeconds(animationLength * 0.5f);
         
         // Saldırı bitti
         isAttacking = false;
         animator.applyRootMotion = false;
+    }
+
+    void DealDamage()
+    {
+        // Silahın hasarını al
+        float damage = weaponManager != null ? weaponManager.GetCurrentWeaponDamage() : 5f;
+        
+        // Saldırı menzilindeki tüm düşmanları bul
+        Collider[] hitEnemies = Physics.OverlapSphere(attackPoint.position, attackRange);
+        
+        foreach (Collider enemy in hitEnemies)
+        {
+            // Boss'u vurduk mu?
+            BossController boss = enemy.GetComponent<BossController>();
+            if (boss != null)
+            {
+                boss.TakeDamage(damage);
+                Debug.Log($"Boss'a {damage} hasar verildi!");
+            }
+        }
+    }
+
+    // Debug için saldırı menzilini göster
+    void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(attackPoint.position, attackRange);
     }
 }

@@ -27,6 +27,12 @@ public class BossController : MonoBehaviour
     [SerializeField] private float chaseSpeed = 3.5f;
     [SerializeField] private float rotationSpeed = 5f;
 
+    [Header("Health Settings")]
+    [Tooltip("Boss'un maksimum canı")]
+    [SerializeField] private float maxHealth = 100f;
+    
+    private float currentHealth;
+
     // State
     private enum BossState { Idle, Chase, Attack }
     private BossState currentState = BossState.Idle;
@@ -34,6 +40,7 @@ public class BossController : MonoBehaviour
     // Attack timing
     private float lastAttackTime = -999f;
     private bool isAttacking = false;
+    private bool isDead = false;
 
     // Animation IDs
     private int animIDWalk;
@@ -65,11 +72,14 @@ public class BossController : MonoBehaviour
         // Animation ID'lerini ayarla
         animIDWalk = Animator.StringToHash("Walk");
         animIDAttack = Animator.StringToHash("Attack");
+
+        // Can sistemini başlat
+        currentHealth = maxHealth;
     }
 
     void Update()
     {
-        if (player == null) return;
+        if (player == null || isDead) return;
 
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
 
@@ -198,6 +208,51 @@ public class BossController : MonoBehaviour
         // Walk animasyonu - Sadece Chase state'inde yürüyor
         bool isWalking = (currentState == BossState.Chase);
         animator.SetBool(animIDWalk, isWalking);
+    }
+
+    // Hasar alma fonksiyonu - Dışarıdan çağrılabilir
+    public void TakeDamage(float damage)
+    {
+        if (isDead) return;
+
+        currentHealth -= damage;
+        Debug.Log($"Boss hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        isDead = true;
+        currentHealth = 0;
+
+        Debug.Log("Boss öldü!");
+
+        // NavMeshAgent'ı durdur
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+
+        // Ölüm animasyonu (eğer varsa)
+        if (animator != null)
+        {
+            animator.SetTrigger("Death"); // Animator'da "Death" trigger'ı olmalı
+        }
+
+        // Collider'ı kapat (isteğe bağlı)
+        Collider col = GetComponent<Collider>();
+        if (col != null)
+        {
+            col.enabled = false;
+        }
+
+        // 3 saniye sonra objeyi yok et (isteğe bağlı)
+        Destroy(gameObject, 3f);
     }
 
     // Debug için Gizmos

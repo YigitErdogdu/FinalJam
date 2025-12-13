@@ -19,8 +19,18 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
-        // Sol fare tuşuna basıldığında
-        if (Input.GetMouseButtonDown(0) && !isAttacking)
+        // Defans kontrolü (Ctrl tuşu) - Saldırı yaparken defans yapamaz
+        if (Input.GetKey(KeyCode.LeftControl) && !isAttacking)
+        {
+            animator.SetBool("IsDefending", true);
+        }
+        else
+        {
+            animator.SetBool("IsDefending", false);
+        }
+
+        // Sol fare tuşuna basıldığında - Defans yaparken saldırı yapamaz
+        if (Input.GetMouseButtonDown(0) && !isAttacking && !Input.GetKey(KeyCode.LeftControl))
         {
             StartCoroutine(Attack());
         }

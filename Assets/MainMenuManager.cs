@@ -9,48 +9,62 @@ public class MainMenuManager : MonoBehaviour
     public GameObject loadingPaneli;
     public TMP_Text loadingYazisi;
 
+    [Header("Menü Ayarlarý")]
+    public GameObject howToPlayPaneli; // Yeni Panelimiz
+
     public void OyunuBaslat()
     {
         StartCoroutine(SahneYukleVeAnimasyonYap());
     }
 
+    // --- YENÝ EKLENEN FONKSÝYONLAR ---
+
+    // 1. How To Play butonuna basýnca çalýþacak
+    public void HowToPlayAc()
+    {
+        howToPlayPaneli.SetActive(true); // Paneli açar
+    }
+
+    // 2. Panelin içindeki Quit/Geri butonuna basýnca çalýþacak
+    public void HowToPlayKapat()
+    {
+        howToPlayPaneli.SetActive(false); // Paneli kapatýr, menüye döner
+    }
+
+    // 3. Ana menüdeki Quit butonuna basýnca çalýþacak
+    public void OyundanCik()
+    {
+        Debug.Log("Oyundan çýkýldý!"); // Editörde çýkmaz, sadece konsola yazar
+        Application.Quit(); // Gerçek oyunda (Build'de) oyunu kapatýr
+    }
+
+    // ---------------------------------
+
     IEnumerator SahneYukleVeAnimasyonYap()
     {
+        // (Burasý senin eski kodun, aynen kalsýn)
         loadingPaneli.SetActive(true);
-
-        // EN AZ KAÇ SANÝYE BEKLESÝN? (Buradan ayarlayabilirsin)
         float minimumBeklemeSuresi = 3.0f;
         float toplamGecenSure = 0f;
-
         AsyncOperation operasyon = SceneManager.LoadSceneAsync(1);
-        operasyon.allowSceneActivation = false; // Otomatik geçiþi engelle
-
+        operasyon.allowSceneActivation = false;
         float yaziZamanlayici = 0;
 
-        // Hem yükleme bitene kadar HEM DE süremiz dolana kadar dön
         while (!operasyon.isDone)
         {
             float zamanFarki = Time.deltaTime;
             toplamGecenSure += zamanFarki;
             yaziZamanlayici += zamanFarki;
 
-            // --- YAZI ANÝMASYONU ---
-            if (yaziZamanlayici < 0.5f)
-                loadingYazisi.text = "LOADING.";
-            else if (yaziZamanlayici < 1.0f)
-                loadingYazisi.text = "LOADING..";
-            else if (yaziZamanlayici < 1.5f)
-                loadingYazisi.text = "LOADING...";
-            else
-                yaziZamanlayici = 0;
-            // -----------------------
+            if (yaziZamanlayici < 0.5f) loadingYazisi.text = "LOADING.";
+            else if (yaziZamanlayici < 1.0f) loadingYazisi.text = "LOADING..";
+            else if (yaziZamanlayici < 1.5f) loadingYazisi.text = "LOADING...";
+            else yaziZamanlayici = 0;
 
-            // Yükleme %90'a geldiyse (%0.9) VE beklediðimiz süre dolduysa geçiþ yap
             if (operasyon.progress >= 0.9f && toplamGecenSure >= minimumBeklemeSuresi)
             {
                 operasyon.allowSceneActivation = true;
             }
-
             yield return null;
         }
     }

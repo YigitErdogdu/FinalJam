@@ -41,6 +41,15 @@ public class PlayerCombat : MonoBehaviour
         {
             attackPoint = transform;
         }
+        
+        // Sadece arena sahnesinde combat aktif olsun
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!currentScene.Contains("Arena") && !currentScene.Contains("Level2") && !currentScene.Contains("Level3"))
+        {
+            // Arena sahnesi değilse, bu script'i deaktif et
+            this.enabled = false;
+            Debug.Log($"PlayerCombat deaktif edildi. Sahne: {currentScene}");
+        }
     }
 
     void Update()

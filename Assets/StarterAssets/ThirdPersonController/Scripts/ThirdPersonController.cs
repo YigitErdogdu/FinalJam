@@ -174,11 +174,11 @@ namespace StarterAssets
         {
             _hasAnimator = TryGetComponent(out _animator);
 
-            // Ölüyse hareket etme
+            // Ölüyse hareket etme (sadece PlayerHealth varsa VE ölüyse)
             PlayerHealth playerHealth = GetComponent<PlayerHealth>();
             if (playerHealth != null && playerHealth.IsDead())
             {
-                return;
+                return; // Ölü, hareket etme
             }
 
             // Rolling kontrolü
@@ -289,22 +289,31 @@ namespace StarterAssets
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
-                //float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                //    RotationSmoothTime);
-                float rotation = Mathf.SmoothDampAngle(playerModel.eulerAngles.y, _targetRotation, ref _rotationVelocity,
+                
+                // playerModel varsa onu kullan, yoksa transform kullan
+                Transform rotationTarget = playerModel != null ? playerModel : transform;
+                
+                float rotation = Mathf.SmoothDampAngle(rotationTarget.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                     RotationSmoothTime);
 
                 // rotate to face input direction relative to camera position
-                //transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
-                playerModel.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                rotationTarget.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
 
 
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // move the player
-            _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
-                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+            Vector3 movement = targetDirection.normalized * (_speed * Time.deltaTime) +
+                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime;
+            
+            _controller.Move(movement);
+            
+            // Debug - Neden hareket etmiyor?
+            if (_input.move != Vector2.zero && _speed > 0.1f)
+            {
+                Debug.Log($"Hareket: Speed={_speed}, Input={_input.move}, Movement={movement}, Controller Enabled={_controller.enabled}");
+            }
 
             // update animator if using character
             if (_hasAnimator)

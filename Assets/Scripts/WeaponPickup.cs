@@ -39,6 +39,15 @@ public class WeaponPickup : MonoBehaviour
         {
             Debug.LogWarning("WeaponManager bulunamadı!");
         }
+        
+        // Sadece arena sahnesinde weapon pickup aktif olsun
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!currentScene.Contains("Arena") && !currentScene.Contains("Level2") && !currentScene.Contains("Level3"))
+        {
+            // Arena sahnesi değilse, bu script'i deaktif et
+            this.enabled = false;
+            Debug.Log($"WeaponPickup deaktif edildi. Sahne: {currentScene}");
+        }
     }
 
     void Update()

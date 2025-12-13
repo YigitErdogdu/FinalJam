@@ -130,6 +130,48 @@ public class BossController : MonoBehaviour
         UpdateAnimator();
     }
 
+    void LateUpdate()
+    {
+        // Boss'u ZORLA zeminde tut - HER FRAME
+        if (!isDead && transform != null)
+        {
+            Vector3 currentPos = transform.position;
+            
+            // Raycast ile zemini bul
+            RaycastHit hit;
+            if (Physics.Raycast(currentPos + Vector3.up * 3f, Vector3.down, out hit, 10f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                float groundY = hit.point.y;
+                
+                // HER ZAMAN zemin seviyesinde tut (küçük tolerans: 0.05)
+                if (Mathf.Abs(currentPos.y - groundY) > 0.05f)
+                {
+                    Vector3 correctedPos = new Vector3(currentPos.x, groundY, currentPos.z);
+                    transform.position = correctedPos;
+                    
+                    // NavMeshAgent'ı da senkronize et
+                    if (agent != null && agent.enabled && agent.isOnNavMesh)
+                    {
+                        agent.nextPosition = correctedPos;
+                    }
+                }
+            }
+            
+            // NavMeshAgent ile transform arasındaki Y farkını kontrol et
+            if (agent != null && agent.enabled && agent.isOnNavMesh)
+            {
+                Vector3 agentPos = agent.nextPosition;
+                
+                // Y pozisyonları farklıysa düzelt
+                if (Mathf.Abs(transform.position.y - agentPos.y) > 0.05f)
+                {
+                    // Transform'un Y'sini kullan
+                    agent.nextPosition = new Vector3(agentPos.x, transform.position.y, agentPos.z);
+                }
+            }
+        }
+    }
+
     private void HandleIdleState(float distanceToPlayer)
     {
         // Oyuncu algılama alanına girdi mi?

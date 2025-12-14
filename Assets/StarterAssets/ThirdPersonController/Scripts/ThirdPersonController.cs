@@ -255,8 +255,29 @@ namespace StarterAssets
 
         private void CameraRotation()
         {
+            // Debug: Kamera sorunlarını kontrol et
+            if (Time.frameCount % 60 == 0) // Her saniye bir kontrol et
+            {
+                if (CinemachineCameraTarget == null)
+                {
+                    Debug.LogError("❌ KAMERA HATASI: CinemachineCameraTarget NULL! Kamera hareket edemez!");
+                }
+                if (LockCameraPosition)
+                {
+                    Debug.LogWarning("⚠️ KAMERA KİLİTLİ: LockCameraPosition = true! Kamera hareket edemez!");
+                }
+                if (_input == null)
+                {
+                    Debug.LogError("❌ KAMERA HATASI: StarterAssetsInputs NULL!");
+                }
+                else if (_input.look.sqrMagnitude < _threshold)
+                {
+                    Debug.Log($"ℹ️ Kamera Input: {_input.look}, Threshold: {_threshold}, SqrMagnitude: {_input.look.sqrMagnitude}");
+                }
+            }
+            
             // if there is an input and camera position is not fixed
-            if (_input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
+            if (_input != null && _input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
             {
                 //Don't multiply mouse input by Time.deltaTime;
                 float deltaTimeMultiplier = IsCurrentDeviceMouse ? 1.0f : Time.deltaTime;
@@ -270,8 +291,11 @@ namespace StarterAssets
             _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
             // Cinemachine will follow this target
-            CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
-                _cinemachineTargetYaw, 0.0f);
+            if (CinemachineCameraTarget != null)
+            {
+                CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
+                    _cinemachineTargetYaw, 0.0f);
+            }
         }
 
         private void Move()

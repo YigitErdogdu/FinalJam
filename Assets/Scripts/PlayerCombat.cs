@@ -163,12 +163,38 @@ public class PlayerCombat : MonoBehaviour
         
         foreach (Collider enemy in hitEnemies)
         {
+            // Dost robot mu kontrol et (EnemyFollower component'i varsa)
+            EnemyFollower friendlyRobot = enemy.GetComponent<EnemyFollower>();
+            if (friendlyRobot != null)
+            {
+                // Dost robota saldırma!
+                Debug.Log($"💜 {enemy.name} dost bir robot! Ona saldırmıyoruz.");
+                continue; // Bu düşmanı atla, bir sonrakine geç
+            }
+            
+            // SimpleFollower kontrolü (NavMesh olmayan versiyon)
+            SimpleFollower simpleFollower = enemy.GetComponent<SimpleFollower>();
+            if (simpleFollower != null)
+            {
+                // Dost robota saldırma!
+                Debug.Log($"💜 {enemy.name} dost bir robot! Ona saldırmıyoruz.");
+                continue;
+            }
+            
             // Boss'u vurduk mu?
             BossController boss = enemy.GetComponent<BossController>();
             if (boss != null)
             {
                 boss.TakeDamage(damage);
                 Debug.Log($"Boss'a {damage} hasar verildi!");
+            }
+            
+            // EnemyAI'a sahip düşmanları vurduk mu? (gelecekte kullanılabilir)
+            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+            if (enemyAI != null)
+            {
+                enemyAI.TakeDamage(damage);
+                Debug.Log($"{enemy.name}'e {damage} hasar verildi!");
             }
         }
     }

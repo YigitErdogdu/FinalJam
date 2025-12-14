@@ -4852,8 +4852,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneTeleporter
   targetSceneName: Level1_Base 1
   targetSceneIndex: 3
-  loadingPanel: {fileID: 0}
-  loadingText: {fileID: 0}
+  loadingPanel: {fileID: 671634793}
+  loadingText: {fileID: 1441234935}
   minimumLoadingTime: 2
 --- !u!1001 &1950927306
 PrefabInstance:

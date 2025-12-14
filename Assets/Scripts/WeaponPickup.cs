@@ -22,6 +22,8 @@ public class WeaponPickup : MonoBehaviour
     [SerializeField] private string weaponTag = "Weapon";
     
     private GameObject currentWeapon;
+
+    private bool isHaveWeapon;
     
     void Start()
     {
@@ -48,9 +50,10 @@ public class WeaponPickup : MonoBehaviour
         CheckForWeapon();
         
         // E tuşuna basıldığında silahı al
-        if (Input.GetKeyDown(KeyCode.E) && currentWeapon != null)
+        if (Input.GetKeyDown(KeyCode.E) && currentWeapon != null && !isHaveWeapon)
         {
             PickupWeapon(currentWeapon);
+            isHaveWeapon = true;
         }
     }
     

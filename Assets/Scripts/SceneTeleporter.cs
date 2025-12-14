@@ -56,14 +56,18 @@ public class SceneTeleporter : MonoBehaviour
         // Sadece Player tetiklesin
         if (!other.CompareTag("Player"))
         {
+            Debug.Log($"ℹ️ Teleport tetiklendi ama Player değil: {other.tag}");
             return;
         }
         
         // Zaten teleport ediliyorsa tekrar tetikleme
         if (isTeleporting)
         {
+            Debug.Log("ℹ️ Zaten teleport ediliyor, tekrar tetiklenmedi.");
             return;
         }
+        
+        Debug.Log($"✅ Player trigger'a girdi! Teleport başlatılıyor...");
         
         // Teleport başlat
         StartCoroutine(TeleportToScene());
@@ -75,27 +79,49 @@ public class SceneTeleporter : MonoBehaviour
         
         Debug.Log($"🚀 Teleport başlatılıyor... Hedef: {GetTargetSceneName()}");
         
+        // Hedef sahne kontrolü
+        if (targetSceneIndex < 0 && string.IsNullOrEmpty(targetSceneName))
+        {
+            Debug.LogError("❌ SceneTeleporter: Hedef sahne belirtilmemiş! targetSceneName veya targetSceneIndex ayarlayın!");
+            isTeleporting = false;
+            yield break;
+        }
+        
         // Loading screen'i göster
         if (loadingPanel != null)
         {
             loadingPanel.SetActive(true);
+            Debug.Log("✅ Loading panel açıldı!");
         }
+        else
+        {
+            Debug.LogError("❌ Loading panel NULL! Loading screen bulunamadı!");
+            isTeleporting = false;
+            yield break;
+        }
+        
+        // Kısa bir bekleme (loading screen'in görünmesi için)
+        yield return new WaitForSeconds(0.1f);
         
         // Sahne yükleme başlat
         AsyncOperation operation;
         
         if (targetSceneIndex >= 0)
         {
+            Debug.Log($"📦 Sahne yükleniyor (Index): {targetSceneIndex}");
             operation = SceneManager.LoadSceneAsync(targetSceneIndex);
-        }
-        else if (!string.IsNullOrEmpty(targetSceneName))
-        {
-            operation = SceneManager.LoadSceneAsync(targetSceneName);
         }
         else
         {
-            Debug.LogError("❌ SceneTeleporter: Hedef sahne belirtilmemiş! targetSceneName veya targetSceneIndex ayarlayın!");
+            Debug.Log($"📦 Sahne yükleniyor (İsim): {targetSceneName}");
+            operation = SceneManager.LoadSceneAsync(targetSceneName);
+        }
+        
+        if (operation == null)
+        {
+            Debug.LogError($"❌ Sahne yüklenemedi! Hedef: {GetTargetSceneName()}");
             isTeleporting = false;
+            if (loadingPanel != null) loadingPanel.SetActive(false);
             yield break;
         }
         
@@ -103,6 +129,8 @@ public class SceneTeleporter : MonoBehaviour
         
         float elapsedTime = 0f;
         float textTimer = 0f;
+        
+        Debug.Log("⏳ Loading başladı...");
         
         // Loading animasyonu (hazır sisteminizle aynı)
         while (!operation.isDone)
@@ -122,13 +150,14 @@ public class SceneTeleporter : MonoBehaviour
             // Minimum süre geçtiyse ve yükleme tamamlandıysa sahneyi aktif et
             if (operation.progress >= 0.9f && elapsedTime >= minimumLoadingTime)
             {
+                Debug.Log($"✅ Yükleme tamamlandı! Sahne aktif ediliyor...");
                 operation.allowSceneActivation = true;
             }
             
             yield return null;
         }
         
-        Debug.Log($"✅ Teleport tamamlandı!");
+        Debug.Log($"✅ Teleport tamamlandı! Yeni sahne: {GetTargetSceneName()}");
     }
     
     string GetTargetSceneName()

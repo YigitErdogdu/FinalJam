@@ -5,7 +5,7 @@ public class PlayerHealth : MonoBehaviour
 {
     public int maxHealth = 10;
     public int currentHealth;
-    public Image healthBarImage; // Canvas'taki HealthBar'ý buraya sürükleyeceðiz
+     // Canvas'taki HealthBar'ý buraya sürükleyeceðiz
 
     void Start()
     {
@@ -16,7 +16,7 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
-        UpdateHealthUI();
+        
 
         if (currentHealth <= 0)
         {

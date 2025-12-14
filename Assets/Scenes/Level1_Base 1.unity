@@ -11822,8 +11822,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d5bf72ba7325cd4fba7b64d265b7586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneTeleporter
-  targetSceneName: Level1_Base 1
-  targetSceneIndex: 3
+  targetSceneName: Level2_Arenaa
+  targetSceneIndex: 4
   loadingPanel: {fileID: 140677523}
   loadingText: {fileID: 631672558}
   minimumLoadingTime: 2

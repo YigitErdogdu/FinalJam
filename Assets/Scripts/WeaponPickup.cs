@@ -212,13 +212,6 @@ public class WeaponPickup : MonoBehaviour
             rb.isKinematic = true;
         }
         
-        // Collider'ı kapat
-        Collider weaponCollider = weaponObject.GetComponent<Collider>();
-        if (weaponCollider != null)
-        {
-            weaponCollider.enabled = false;
-        }
-        
         // Silahı sağ elin child'ı yap
         weaponObject.transform.SetParent(handTransform);
         

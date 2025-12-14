@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -9,48 +10,24 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("Hasar alma sonrası geçici hasar almama süresi (saniye)")]
     [SerializeField] private float invincibilityDuration = 1f;
     
-    [Header("Respawn Settings")]
-    [Tooltip("Ölümden sonra respawn süresi (saniye)")]
-    [SerializeField] private float respawnDelay = 3f;
+    [Tooltip("Enemy tag'ine sahip objelerle çarpışmada alınacak hasar")]
+    [SerializeField] private float collisionDamage = 10f;
+  
     
     private float currentHealth;
-    private float lastDamageTime = -999f;
     private bool isDead = false;
+    private float lastDamageTime = -999f; // Invincibility için
     
-    // Spawn pozisyonu
-    private Vector3 spawnPosition;
-    private Quaternion spawnRotation;
-    private bool spawnPositionSaved = false;
-    
-    // Events
-    public System.Action<float, float> OnHealthChanged; // (currentHealth, maxHealth)
-    public System.Action OnDeath;
+
     
     void Awake()
     {
-        // Başlangıç pozisyonunu kaydet (en erken)
-        if (!spawnPositionSaved)
-        {
-            spawnPosition = transform.position;
-            spawnRotation = transform.rotation;
-            spawnPositionSaved = true;
-            Debug.Log($"✅ Player spawn pozisyonu kaydedildi: {spawnPosition}");
-        }
+      
     }
     
     void Start()
     {
         currentHealth = maxHealth;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        
-        // Spawn pozisyonunu tekrar kontrol et
-        if (!spawnPositionSaved)
-        {
-            spawnPosition = transform.position;
-            spawnRotation = transform.rotation;
-            spawnPositionSaved = true;
-            Debug.Log($"✅ Player spawn pozisyonu START'ta kaydedildi: {spawnPosition}");
-        }
     }
     
     public void TakeDamage(float damage)
@@ -58,17 +35,15 @@ public class PlayerHealth : MonoBehaviour
         if (isDead) return;
         
         // Invincibility kontrolü
-        if (Time.time < lastDamageTime + invincibilityDuration)
+        if (Time.time - lastDamageTime < invincibilityDuration)
         {
-            return; // Hasar alma
+            return; // Hasar alma süresi dolmadı, hasar verme
         }
         
-        lastDamageTime = Time.time;
         currentHealth -= damage;
-        currentHealth = Mathf.Max(0, currentHealth);
+        lastDamageTime = Time.time;
         
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        Debug.Log($"Oyuncu hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+        Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
         
         if (currentHealth <= 0)
         {
@@ -76,14 +51,24 @@ public class PlayerHealth : MonoBehaviour
         }
     }
     
-    public void Heal(float amount)
+    // Enemy tag'ine sahip objelerle çarpışma (Collision)
+    void OnCollisionEnter(Collision collision)
     {
-        if (isDead) return;
-        
-        currentHealth += amount;
-        currentHealth = Mathf.Min(currentHealth, maxHealth);
-        
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            TakeDamage(collisionDamage);
+            Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
+        }
+    }
+    
+    // Enemy tag'ine sahip objelerle çarpışma (Trigger)
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Enemy"))
+        {
+            TakeDamage(collisionDamage);
+            Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
+        }
     }
     
     private void Die()
@@ -93,120 +78,32 @@ public class PlayerHealth : MonoBehaviour
         isDead = true;
         currentHealth = 0;
         
-        Debug.Log($"💀 Oyuncu öldü! {respawnDelay} saniye sonra respawn olacak...");
+        Debug.Log($"💀 Oyuncu öldü!");
         
-        OnDeath?.Invoke();
-        
-        // Ölüm animasyonu (eğer Death trigger'ı varsa)
+        // Ölüm animasyonu
         Animator animator = GetComponent<Animator>();
         if (animator != null)
         {
-            // Death trigger'ı var mı kontrol et
-            bool hasDeathTrigger = false;
-            foreach (AnimatorControllerParameter param in animator.parameters)
-            {
-                if (param.name == "Death" && param.type == AnimatorControllerParameterType.Trigger)
-                {
-                    hasDeathTrigger = true;
-                    break;
-                }
-            }
-            
-            if (hasDeathTrigger)
-            {
-                animator.SetTrigger("Death");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Animator'da 'Death' trigger'ı yok! Ölüm animasyonu oynatılamadı.");
-            }
+            animator.SetTrigger("Death");
         }
         
-        // Respawn'ı başlat
-        Invoke(nameof(Respawn), respawnDelay);
+        //hedef sahneyi yükle
     }
     
-    public bool IsDead()
-    {
-        return isDead;
-    }
+    // Public getter metodları
+    public float GetCurrentHealth() => currentHealth;
+    public float GetMaxHealth() => maxHealth;
+    public bool IsDead() => isDead;
     
-    public float GetCurrentHealth()
-    {
-        return currentHealth;
-    }
-    
-    public float GetMaxHealth()
-    {
-        return maxHealth;
-    }
-    
-    public float GetHealthPercentage()
-    {
-        return currentHealth / maxHealth;
-    }
-    
+    // Canı resetle (respawn için)
     public void ResetHealth()
     {
-        isDead = false;
         currentHealth = maxHealth;
+        isDead = false;
         lastDamageTime = -999f;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
-        Debug.Log("✅ PlayerHealth resetlendi!");
+        Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
     }
+        
     
-    private void Respawn()
-    {
-        if (this == null || gameObject == null) return;
-        
-        Debug.Log($"🔄 Player respawn başlıyor... Spawn pozisyonu: {spawnPosition}");
-        
-        // CharacterController'ı geçici olarak kapat
-        CharacterController controller = GetComponent<CharacterController>();
-        if (controller != null)
-        {
-            controller.enabled = false;
-        }
-        
-        // Pozisyonu ve rotasyonu resetle
-        transform.position = spawnPosition;
-        transform.rotation = spawnRotation;
-        
-        // Canı doldur
-        ResetHealth();
-        
-        // Silahları resetle
-        WeaponManager weaponManager = GetComponent<WeaponManager>();
-        if (weaponManager != null)
-        {
-            weaponManager.ResetWeapons();
-        }
-        
-        // Animator'ı resetle
-        Animator animator = GetComponent<Animator>();
-        if (animator != null)
-        {
-            animator.Rebind();
-            animator.Update(0f);
-        }
-        
-        // CharacterController'ı tekrar aç
-        if (controller != null)
-        {
-            controller.enabled = true;
-        }
-        
-        Debug.Log($"✅ Player respawn tamamlandı! Pozisyon: {transform.position}");
-    }
-    
-    void OnDestroy()
-    {
-        CancelInvoke();
-    }
-    
-    void OnDisable()
-    {
-        CancelInvoke();
-    }
 }
 

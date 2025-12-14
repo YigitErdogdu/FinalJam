@@ -195,13 +195,6 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
-            
-            // PlayerHealth yoksa otomatik ekle
-            if (GetComponent<PlayerHealth>() == null)
-            {
-                gameObject.AddComponent<PlayerHealth>();
-                Debug.Log("✅ PlayerHealth otomatik olarak eklendi!");
-            }
         }
 
         private void Update()

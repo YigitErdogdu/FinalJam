@@ -1,119 +1,130 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI; // Slider için gerekli kütüphane
 
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     [Tooltip("Oyuncunun maksimum canı")]
     [SerializeField] private float maxHealth = 100f;
-    
+
     [Tooltip("Hasar alma sonrası geçici hasar almama süresi (saniye)")]
     [SerializeField] private float invincibilityDuration = 1f;
-    
+
     [Tooltip("Enemy tag'ine sahip objelerle çarpışmada alınacak hasar")]
     [SerializeField] private float collisionDamage = 10f;
-  
-    
+
     private float currentHealth;
     private bool isDead = false;
     private float lastDamageTime = -999f; // Invincibility için
-    
 
-    
+    [Header("UI Settings")]
+    public Slider healthSlider; // BURASI DEĞİŞTİ: Artık Image değil Slider alıyoruz
+
     void Awake()
     {
-      
+        // Gerekirse initialization
     }
-    
+
     void Start()
     {
         currentHealth = maxHealth;
+
+        // Oyun başladığında Slider ayarlarını yapalım
+        if (healthSlider != null)
+        {
+            healthSlider.maxValue = maxHealth; // Slider'ın maksimum değeri canımız kadar olsun (örn: 100)
+            healthSlider.value = currentHealth; // Slider'ı fulleyelim
+        }
     }
-    
+
     public void TakeDamage(float damage)
     {
         if (isDead) return;
-        
+
         // Invincibility kontrolü
         if (Time.time - lastDamageTime < invincibilityDuration)
         {
             return; // Hasar alma süresi dolmadı, hasar verme
         }
-        
+
+        // ÖNCE hasarı düşüyoruz
         currentHealth -= damage;
         lastDamageTime = Time.time;
-        
-        // Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
-        
+
+        // SONRA UI'ı güncelliyoruz (Burası önemli, yer değiştirdi)
+        UpdateHealthUI();
+
+        Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+
         if (currentHealth <= 0)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            Die();
         }
     }
-    
+
     // Enemy tag'ine sahip objelerle çarpışma (Collision)
     void OnCollisionEnter(Collision collision)
     {
-        if (IsEnemy(collision.gameObject))
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             TakeDamage(collisionDamage);
-            // Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
+            Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
         }
     }
-    
+
     // Enemy tag'ine sahip objelerle çarpışma (Trigger)
     void OnTriggerEnter(Collider other)
     {
-        // Silah, Weapon gibi objeleri ignore et
-        if (other.CompareTag("Weapon") || other.name.Contains("Weapon") || other.name.Contains("Sword") || other.name.Contains("Katana"))
-        {
-            return; // Silahlara hasar verme
-        }
-        
-        if (IsEnemy(other.gameObject))
+        if (other.CompareTag("Enemy"))
         {
             TakeDamage(collisionDamage);
-            // Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
+            Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
         }
     }
-    
-    // Düşman kontrolü - sadece component kontrolü (tag kontrolü yok, çünkü "Enemy" tag'i tanımlı değil)
-    private bool IsEnemy(GameObject obj)
-    {
-        if (obj == null) return false;
-        
-        // Component kontrolü yap (EnemyAI, BossController gibi düşman component'leri)
-        // Bu daha güvenilir çünkü tag'e bağımlı değil
-        if (obj.GetComponent<EnemyAI>() != null || 
-            obj.GetComponent<BossController>() != null ||
-            obj.GetComponentInParent<EnemyAI>() != null ||
-            obj.GetComponentInParent<BossController>() != null)
-        {
-            return true;
-        }
-        
-        return false;
-    }
-    
+
     private void Die()
     {
-        
+        if (isDead) return;
+
+        isDead = true;
+        currentHealth = 0;
+        UpdateHealthUI(); // Ölünce barın tamamen boşaldığından emin olalım
+
+        Debug.Log($"💀 Oyuncu öldü!");
+
+        // Ölüm animasyonu
+        Animator animator = GetComponent<Animator>();
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+        }
+
+        // Buraya Game Over ekranı veya sahne geçiş kodu gelecek
     }
-    
+
+    // UI Güncelleme Fonksiyonu
+    void UpdateHealthUI()
+    {
+        if (healthSlider != null)
+        {
+            // Slider değerini direkt mevcut cana eşitliyoruz
+            healthSlider.value = currentHealth;
+        }
+    }
+
     // Public getter metodları
     public float GetCurrentHealth() => currentHealth;
     public float GetMaxHealth() => maxHealth;
     public bool IsDead() => isDead;
-    
+
     // Canı resetle (respawn için)
     public void ResetHealth()
     {
         currentHealth = maxHealth;
         isDead = false;
         lastDamageTime = -999f;
-        // Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
+        UpdateHealthUI(); // Resetlenince barı da fulle
+        Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
     }
-        
-    
 }
-

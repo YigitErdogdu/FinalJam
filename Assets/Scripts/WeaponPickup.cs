@@ -22,8 +22,9 @@ public class WeaponPickup : MonoBehaviour
     [SerializeField] private string weaponTag = "Weapon";
     
     private GameObject currentWeapon;
-
     private bool isHaveWeapon;
+    private Vector3 weaponOriginalPosition; // Silahın ilk alındığı pozisyon
+    private Quaternion weaponOriginalRotation; // Silahın ilk alındığı rotasyon
     
     void Start()
     {
@@ -46,15 +47,47 @@ public class WeaponPickup : MonoBehaviour
     
     void Update()
     {
+        // Elinde silah var mı kontrol et
+        CheckIfHasWeapon();
+        
         // Raycast ile silah ara
         CheckForWeapon();
         
-        // E tuşuna basıldığında silahı al
-        if (Input.GetKeyDown(KeyCode.E) && currentWeapon != null && !isHaveWeapon)
+        // E tuşuna basıldığında
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            PickupWeapon(currentWeapon);
-            isHaveWeapon = true;
+            // Elinde silah varsa bırak
+            if (isHaveWeapon)
+            {
+                DropWeapon();
+            }
+            // Elinde silah yoksa ve raycast'te silah varsa al
+            else if (currentWeapon != null)
+            {
+                PickupWeapon(currentWeapon);
+            }
         }
+    }
+    
+    void CheckIfHasWeapon()
+    {
+        // Right Hand'de silah var mı kontrol et
+        Transform handTransform = rightHand != null ? rightHand : transform;
+        
+        if (handTransform.childCount > 0)
+        {
+            // Child'larda Weapon tag'li obje var mı?
+            foreach (Transform child in handTransform)
+            {
+                if (child.CompareTag(weaponTag))
+                {
+                    isHaveWeapon = true;
+                    return;
+                }
+            }
+        }
+        
+        isHaveWeapon = false;
     }
     
     void CheckForWeapon()
@@ -107,7 +140,77 @@ public class WeaponPickup : MonoBehaviour
         
         Debug.Log($"🎯 Silah alınıyor: {weaponObject.name}");
         
+        // Weapon component'i yoksa ekle veya güncelle
+        Weapon weapon = weaponObject.GetComponent<Weapon>();
+        if (weapon == null)
+        {
+            weapon = weaponObject.AddComponent<Weapon>();
+        }
         
+        // Silah ismine göre hasar ve tip ayarla
+        string weaponName = weaponObject.name.ToLower();
+        
+        // 193_Weapon → 20 hasar
+        if (weaponName.Contains("193_weapon") || weaponName.Contains("193 weapon"))
+        {
+            weapon.weaponName = "193_Weapon";
+            weapon.weaponType = Weapon.WeaponType.White;
+            weapon.damage = 20f;
+            Debug.Log($"✅ 193_Weapon olarak ayarlandı! Hasar: {weapon.damage}");
+        }
+        // Sword 13 → 10 hasar
+        else if (weaponName.Contains("sword 13") || weaponName.Contains("sword13"))
+        {
+            weapon.weaponName = "Sword 13";
+            weapon.weaponType = Weapon.WeaponType.Purple;
+            weapon.damage = 10f;
+            Debug.Log($"✅ Sword 13 olarak ayarlandı! Hasar: {weapon.damage}");
+        }
+        // Eski sistem (geriye dönük uyumluluk)
+        else if (weaponName.Contains("katana") || weaponName.Contains("katana 2"))
+        {
+            weapon.weaponName = "Katana 2";
+            weapon.weaponType = Weapon.WeaponType.White;
+            weapon.damage = 100f;
+            Debug.Log($"✅ Katana 2 olarak ayarlandı! Hasar: {weapon.damage}");
+        }
+        else if (weaponName.Contains("purple") || weaponName.Contains("purple blade"))
+        {
+            weapon.weaponName = "Purple Blade";
+            weapon.weaponType = Weapon.WeaponType.Purple;
+            weapon.damage = 10f;
+            Debug.Log($"✅ Purple Blade olarak ayarlandı! Hasar: {weapon.damage}");
+        }
+        else
+        {
+            // Diğer silahlar için varsayılan değerler
+            weapon.weaponName = weaponObject.name;
+            weapon.weaponType = Weapon.WeaponType.Purple;
+            weapon.damage = 10f;
+            Debug.Log($"✅ Silah varsayılan değerlerle ayarlandı! Hasar: {weapon.damage}");
+        }
+        
+        // Silahın orijinal pozisyonunu ve rotasyonunu kaydet (sadece ilk alışta)
+        if (!isHaveWeapon)
+        {
+            weaponOriginalPosition = weaponObject.transform.position;
+            weaponOriginalRotation = weaponObject.transform.rotation;
+            Debug.Log($"📍 Orijinal pozisyon kaydedildi: {weaponOriginalPosition}");
+        }
+        
+        // Rigidbody varsa kinematic yap (fizik devre dışı)
+        Rigidbody rb = weaponObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            // Önce hızları sıfırla (kinematic olmadan önce)
+            if (!rb.isKinematic)
+            {
+                rb.velocity = Vector3.zero; // Hızı sıfırla
+                rb.angularVelocity = Vector3.zero; // Açısal hızı sıfırla
+            }
+            // Sonra kinematic yap
+            rb.isKinematic = true;
+        }
         
         // Collider'ı kapat
         Collider weaponCollider = weaponObject.GetComponent<Collider>();
@@ -127,9 +230,86 @@ public class WeaponPickup : MonoBehaviour
         // Silahı görünür yap
         weaponObject.SetActive(true);
         
-        Debug.Log($"✅✅✅ {weaponObject.name} başarıyla alındı! Sağ ele eklendi.");
+        // WeaponManager'a kaydet (hasar verme için gerekli)
+        WeaponManager weaponManager = GetComponent<WeaponManager>();
+        if (weaponManager != null)
+        {
+            weaponManager.RegisterWeapon(weapon);
+            Debug.Log($"✅ WeaponManager'a kaydedildi! Hasar: {weapon.damage}");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ WeaponManager bulunamadı! Hasar verme çalışmayabilir!");
+        }
+        
+        Debug.Log($"✅✅✅ {weaponObject.name} başarıyla alındı! Sağ ele eklendi. Hasar: {weapon.damage}");
         
         currentWeapon = null;
+        isHaveWeapon = true;
+    }
+    
+    void DropWeapon()
+    {
+        Transform handTransform = rightHand != null ? rightHand : transform;
+        
+        // Hand'deki silahı bul
+        Transform weaponTransform = null;
+        foreach (Transform child in handTransform)
+        {
+            if (child.CompareTag(weaponTag))
+            {
+                weaponTransform = child;
+                break;
+            }
+        }
+        
+        if (weaponTransform == null)
+        {
+            Debug.LogWarning("⚠️ Elinde silah yok!");
+            isHaveWeapon = false;
+            return;
+        }
+        
+        GameObject weaponObject = weaponTransform.gameObject;
+        Debug.Log($"🎯 Silah bırakılıyor: {weaponObject.name}");
+        
+        // Parent'ı kaldır (dünyaya bırak)
+        weaponObject.transform.SetParent(null);
+        
+        // Pozisyonu ilk alındığı yere koy
+        weaponObject.transform.position = weaponOriginalPosition;
+        
+        // Rotasyonu ilk alındığı rotasyona geri döndür
+        weaponObject.transform.rotation = weaponOriginalRotation;
+        
+        // Rigidbody varsa önce kinematic yap, sonra pozisyonu ayarla, sonra kinematic'i kapat
+        Rigidbody rb = weaponObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            // Önce kinematic yap (pozisyon ayarlanırken fizik devre dışı)
+            rb.isKinematic = true;
+            
+            // Pozisyonu ayarla
+            rb.position = weaponOriginalPosition;
+            rb.rotation = weaponOriginalRotation;
+            
+            // Hızları sıfırla
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            
+            // Sonra kinematic'i kapat (fizik aktif)
+            rb.isKinematic = false;
+        }
+        
+        // Collider'ı tekrar aç
+        Collider weaponCollider = weaponObject.GetComponent<Collider>();
+        if (weaponCollider != null)
+        {
+            weaponCollider.enabled = true;
+        }
+        
+        Debug.Log($"✅✅✅ {weaponObject.name} bırakıldı!");
+        isHaveWeapon = false;
     }
     
     // Recursive olarak child'larda ara

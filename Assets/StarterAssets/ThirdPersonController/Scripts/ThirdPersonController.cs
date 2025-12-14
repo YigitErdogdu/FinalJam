@@ -255,27 +255,6 @@ namespace StarterAssets
 
         private void CameraRotation()
         {
-            // Debug: Kamera sorunlarını kontrol et
-            if (Time.frameCount % 60 == 0) // Her saniye bir kontrol et
-            {
-                if (CinemachineCameraTarget == null)
-                {
-                    Debug.LogError("❌ KAMERA HATASI: CinemachineCameraTarget NULL! Kamera hareket edemez!");
-                }
-                if (LockCameraPosition)
-                {
-                    Debug.LogWarning("⚠️ KAMERA KİLİTLİ: LockCameraPosition = true! Kamera hareket edemez!");
-                }
-                if (_input == null)
-                {
-                    Debug.LogError("❌ KAMERA HATASI: StarterAssetsInputs NULL!");
-                }
-                else if (_input.look.sqrMagnitude < _threshold)
-                {
-                    Debug.Log($"ℹ️ Kamera Input: {_input.look}, Threshold: {_threshold}, SqrMagnitude: {_input.look.sqrMagnitude}");
-                }
-            }
-            
             // if there is an input and camera position is not fixed
             if (_input != null && _input.look.sqrMagnitude >= _threshold && !LockCameraPosition)
             {
@@ -290,11 +269,18 @@ namespace StarterAssets
             _cinemachineTargetYaw = ClampAngle(_cinemachineTargetYaw, float.MinValue, float.MaxValue);
             _cinemachineTargetPitch = ClampAngle(_cinemachineTargetPitch, BottomClamp, TopClamp);
 
-            // Cinemachine will follow this target
+            // Cinemachine will follow this target - Smooth rotation to prevent jitter
             if (CinemachineCameraTarget != null)
             {
-                CinemachineCameraTarget.transform.rotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
+                Quaternion targetRotation = Quaternion.Euler(_cinemachineTargetPitch + CameraAngleOverride,
                     _cinemachineTargetYaw, 0.0f);
+                
+                // Smooth rotation (zıplarken titremeyi önlemek için)
+                CinemachineCameraTarget.transform.rotation = Quaternion.Slerp(
+                    CinemachineCameraTarget.transform.rotation, 
+                    targetRotation, 
+                    Time.deltaTime * 20f // Smooth rotation speed
+                );
             }
         }
 
@@ -403,12 +389,6 @@ namespace StarterAssets
                              new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime;
             
             _controller.Move(movement);
-            
-            // Debug - Neden hareket etmiyor?
-            if (_input.move != Vector2.zero && _speed > 0.1f)
-            {
-                Debug.Log($"Hareket: Speed={_speed}, Input={_input.move}, Movement={movement}, Controller Enabled={_controller.enabled}");
-            }
 
             // update animator if using character
             if (_hasAnimator)

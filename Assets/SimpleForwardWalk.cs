@@ -3,39 +3,64 @@ using UnityEngine.AI;
 
 public class SimpleForwardWalk : MonoBehaviour
 {
+    [Header("Target Settings")]
+    [Tooltip("Takip edilecek hedef (Player - otomatik bulunur)")]
+    public Transform target;
+    
     [Header("Movement Settings")]
     [Tooltip("Hareket hızı")]
     public float walkSpeed = 3f;
     
-    [Tooltip("Otomatik yürüme aktif mi?")]
+    [Tooltip("Otomatik takip aktif mi?")]
     public bool autoWalk = true;
     
-    [Header("Direction Settings")]
-    [Tooltip("Hangi yöne yürüyecek? (1 = ileri, -1 = geri)")]
-    public Vector3 walkDirection = Vector3.forward; // İleri doğru
+    [Header("Follow Settings")]
+    [Tooltip("Oyuncuya ne kadar yaklaşacak (metre) - Bu mesafeye gelince durur")]
+    public float followDistance = 3f;
     
-    [Tooltip("Y eksenini sıfırla (sadece X ve Z ekseninde hareket)")]
-    public bool ignoreYAxis = true;
+    [Tooltip("Oyuncudan bu mesafeden uzaklaşırsa takip etmeye başlar")]
+    public float maxFollowDistance = 100f;
+    
+    [Tooltip("Her zaman takip et (mesafe sınırı olmasın)")]
+    public bool alwaysFollow = true;
+    
+    [Tooltip("Durma mesafesi (followDistance'dan biraz daha büyük - daha erken durur)")]
+    public float stopDistance = 3.5f;
     
     [Tooltip("NavMesh Agent kullanılsın mı?")]
     public bool useNavMesh = true;
     
-    [Header("Stop Settings")]
-    [Tooltip("Belirli bir mesafeden sonra dursun mu?")]
-    public bool stopAfterDistance = false;
+    [Header("Animation Settings")]
+    [Tooltip("Yürüme animasyon parametresi adı (bool)")]
+    public string walkAnimationParameter = "Walk";
     
-    [Tooltip("Ne kadar mesafe yürüsün? (0 = sınırsız)")]
-    public float maxDistance = 0f;
+    [Tooltip("Hız animasyon parametresi adı (float)")]
+    public string speedAnimationParameter = "Speed";
     
     private NavMeshAgent navAgent;
     private Animator animator;
     private Vector3 startPosition;
-    private float distanceTraveled = 0f;
+    private bool isFollowing = false;
     
     void Start()
     {
         // Başlangıç pozisyonunu kaydet
         startPosition = transform.position;
+        
+        // Player'ı otomatik bul
+        if (target == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                target = playerObj.transform;
+                Debug.Log($"✅ {gameObject.name}: Player bulundu! Artık onu takip edeceğim!");
+            }
+            else
+            {
+                Debug.LogWarning($"⚠️ {gameObject.name}: Player bulunamadı! 'Player' tag'ine sahip bir GameObject olmalı.");
+            }
+        }
         
         // NavMesh Agent kontrolü
         navAgent = GetComponent<NavMeshAgent>();
@@ -47,96 +72,152 @@ public class SimpleForwardWalk : MonoBehaviour
         if (navAgent != null)
         {
             navAgent.speed = walkSpeed;
-            navAgent.stoppingDistance = 0.1f;
+            navAgent.stoppingDistance = followDistance; // NavMesh'in durma mesafesi
+            navAgent.autoBraking = true; // Otomatik yavaşlama
+            navAgent.updateRotation = true; // NavMesh rotasyonu kontrol etsin
+            
+            // stopDistance'ı followDistance'dan biraz büyük yap (eğer ayarlanmamışsa)
+            if (stopDistance <= followDistance)
+            {
+                stopDistance = followDistance + 0.5f;
+            }
         }
         
         // Animator kontrolü
         animator = GetComponent<Animator>();
-        
-        // Yönü normalize et
-        if (ignoreYAxis)
-        {
-            walkDirection.y = 0;
-        }
-        walkDirection = walkDirection.normalized;
     }
     
     void Update()
     {
-        if (!autoWalk)
+        if (!autoWalk || target == null)
         {
             // Animator kontrolü - durduğunda
-            if (animator != null)
-            {
-                animator.SetFloat("Speed", 0f);
-            }
+            StopFollowing();
             return;
         }
         
-        // Mesafe kontrolü
-        if (stopAfterDistance && maxDistance > 0)
-        {
-            distanceTraveled = Vector3.Distance(startPosition, transform.position);
-            if (distanceTraveled >= maxDistance)
-            {
-                autoWalk = false;
-                if (animator != null)
-                {
-                    animator.SetFloat("Speed", 0f);
-                }
-                return;
-            }
-        }
+        // Player'a olan mesafe
+        float distanceToTarget = Vector3.Distance(transform.position, target.position);
         
-        // NavMesh kullanıyorsak
-        if (useNavMesh && navAgent != null && navAgent.isOnNavMesh)
+        // Her zaman takip et veya mesafe kontrolü yap
+        if (alwaysFollow || distanceToTarget <= maxFollowDistance)
         {
-            // İleri doğru hareket et
-            Vector3 targetPosition = transform.position + walkDirection * walkSpeed * Time.deltaTime;
-            navAgent.SetDestination(targetPosition);
-            
-            // Animator kontrolü
-            if (animator != null)
+            // Oyuncudan uzaksa takip et (stopDistance'dan uzaksa)
+            if (distanceToTarget > stopDistance)
             {
-                float speed = navAgent.velocity.magnitude;
-                animator.SetFloat("Speed", speed);
+                FollowTarget();
+                isFollowing = true;
+            }
+            else
+            {
+                // Yeterince yakın, dur (followDistance'a ulaştı veya geçti)
+                StopFollowing();
+                isFollowing = false;
+                
+                // Debug: Her 60 frame'de bir mesafe bilgisi
+                if (Time.frameCount % 60 == 0)
+                {
+                    Debug.Log($"🛑 {gameObject.name}: Player'a yeterince yakın! Mesafe: {distanceToTarget:F2}m (Durma: {stopDistance}m, Takip: {followDistance}m)");
+                }
             }
         }
         else
         {
-            // Transform ile hareket
-            Vector3 movement = walkDirection * walkSpeed * Time.deltaTime;
-            transform.position += movement;
+            // Çok uzaklaştı
+            StopFollowing();
+            isFollowing = false;
+        }
+        
+        // Animasyonları güncelle
+        UpdateAnimations();
+    }
+    
+    private void FollowTarget()
+    {
+        if (target == null) return;
+        
+        // NavMesh kullanıyorsak
+        if (useNavMesh && navAgent != null && navAgent.isOnNavMesh)
+        {
+            navAgent.isStopped = false;
+            navAgent.speed = walkSpeed;
+            navAgent.SetDestination(target.position);
+        }
+        else
+        {
+            // Transform ile hareket (NavMesh yoksa)
+            Vector3 direction = (target.position - transform.position).normalized;
+            direction.y = 0; // Sadece yatay düzlemde hareket
             
-            // Rotasyon - yürüdüğü yöne doğru bak
-            if (walkDirection.magnitude > 0.1f)
+            if (direction.magnitude > 0.1f)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(walkDirection);
+                // Hareket et
+                Vector3 movement = direction * walkSpeed * Time.deltaTime;
+                transform.position += movement;
+                
+                // Hedefe doğru dön
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 5f * Time.deltaTime);
-            }
-            
-            // Animator kontrolü
-            if (animator != null)
-            {
-                animator.SetFloat("Speed", walkSpeed);
             }
         }
     }
     
-    // Dışarıdan çağrılabilir - yürümeyi başlat/durdur
+    private void StopFollowing()
+    {
+        if (navAgent != null && navAgent.isOnNavMesh)
+        {
+            navAgent.isStopped = true;
+        }
+    }
+    
+    private void UpdateAnimations()
+    {
+        if (animator == null) return;
+        
+        // NavMesh kullanıyorsak hızı NavMesh'ten al
+        float currentSpeed = 0f;
+        if (useNavMesh && navAgent != null && navAgent.isOnNavMesh)
+        {
+            currentSpeed = navAgent.velocity.magnitude;
+        }
+        else if (isFollowing)
+        {
+            currentSpeed = walkSpeed;
+        }
+        
+        // Speed parametresi (float)
+        if (!string.IsNullOrEmpty(speedAnimationParameter))
+        {
+            animator.SetFloat(speedAnimationParameter, currentSpeed);
+        }
+        
+        // Walk parametresi (bool)
+        if (!string.IsNullOrEmpty(walkAnimationParameter))
+        {
+            animator.SetBool(walkAnimationParameter, isFollowing && currentSpeed > 0.1f);
+        }
+    }
+    
+    // Dışarıdan çağrılabilir - takibi başlat/durdur
     public void SetAutoWalk(bool enable)
     {
         autoWalk = enable;
     }
     
-    // Yönü değiştir
-    public void SetDirection(Vector3 direction)
+    // Hedefi değiştir
+    public void SetTarget(Transform newTarget)
     {
-        if (ignoreYAxis)
+        target = newTarget;
+    }
+    
+    // Takip mesafesini ayarla
+    public void SetFollowDistance(float distance)
+    {
+        followDistance = distance;
+        if (navAgent != null)
         {
-            direction.y = 0;
+            navAgent.stoppingDistance = followDistance;
         }
-        walkDirection = direction.normalized;
     }
 }
 

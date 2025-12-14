@@ -16,6 +16,7 @@ TagManager:
   - 'Katana 2 '
   - Sivri Bicak 2
   - Weapon
+  - Guard
   layers:
   - Default
   - TransparentFX

@@ -293,12 +293,46 @@ public class BossController : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damage;
-        Debug.Log($"Boss hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+        // Debug.Log($"Boss hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0)
         {
-            Destroy(gameObject);
+            Die();
         }
+    }
+    
+    // Boss ölümü - tamamen yok olacak
+    private void Die()
+    {
+        if (isDead) return;
+        
+        isDead = true;
+        currentHealth = 0;
+        
+        // Debug.Log("💀 Boss öldü! Tamamen yok oluyor...");
+        
+        // Ölüm animasyonu (eğer varsa)
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+        }
+        
+        // NavMeshAgent'ı durdur
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.enabled = false;
+        }
+        
+        // Ölüm efekti oynat (eğer varsa)
+        DeathEffect deathEffect = GetComponent<DeathEffect>();
+        if (deathEffect != null)
+        {
+            deathEffect.PlayDeathEffect(transform.position);
+        }
+        
+        // Boss'u tamamen yok et
+        Destroy(gameObject, 0.5f); // 0.5 saniye sonra yok et (animasyon için)
     }
 
     public void OnTriggerEnter(Collider other)

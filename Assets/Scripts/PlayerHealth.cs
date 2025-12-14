@@ -43,61 +43,51 @@ public class PlayerHealth : MonoBehaviour
         currentHealth -= damage;
         lastDamageTime = Time.time;
         
-        // Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+        Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
         
         if (currentHealth <= 0)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            Die();
         }
     }
     
     // Enemy tag'ine sahip objelerle çarpışma (Collision)
     void OnCollisionEnter(Collision collision)
     {
-        if (IsEnemy(collision.gameObject))
+        if (collision.gameObject.CompareTag("Enemy"))
         {
             TakeDamage(collisionDamage);
-            // Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
+            Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
         }
     }
     
     // Enemy tag'ine sahip objelerle çarpışma (Trigger)
     void OnTriggerEnter(Collider other)
     {
-        // Silah, Weapon gibi objeleri ignore et
-        if (other.CompareTag("Weapon") || other.name.Contains("Weapon") || other.name.Contains("Sword") || other.name.Contains("Katana"))
-        {
-            return; // Silahlara hasar verme
-        }
-        
-        if (IsEnemy(other.gameObject))
+        if (other.CompareTag("Enemy"))
         {
             TakeDamage(collisionDamage);
-            // Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
+            Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
         }
-    }
-    
-    // Düşman kontrolü - sadece component kontrolü (tag kontrolü yok, çünkü "Enemy" tag'i tanımlı değil)
-    private bool IsEnemy(GameObject obj)
-    {
-        if (obj == null) return false;
-        
-        // Component kontrolü yap (EnemyAI, BossController gibi düşman component'leri)
-        // Bu daha güvenilir çünkü tag'e bağımlı değil
-        if (obj.GetComponent<EnemyAI>() != null || 
-            obj.GetComponent<BossController>() != null ||
-            obj.GetComponentInParent<EnemyAI>() != null ||
-            obj.GetComponentInParent<BossController>() != null)
-        {
-            return true;
-        }
-        
-        return false;
     }
     
     private void Die()
     {
+        if (isDead) return;
         
+        isDead = true;
+        currentHealth = 0;
+        
+        Debug.Log($"💀 Oyuncu öldü!");
+        
+        // Ölüm animasyonu
+        Animator animator = GetComponent<Animator>();
+        if (animator != null)
+        {
+            animator.SetTrigger("Death");
+        }
+        
+        //hedef sahneyi yükle
     }
     
     // Public getter metodları
@@ -111,7 +101,7 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         isDead = false;
         lastDamageTime = -999f;
-        // Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
+        Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
     }
         
     

@@ -234,10 +234,10 @@ public class SimpleFollower : MonoBehaviour
                 }
             }
             
-            // if (Time.frameCount % 120 == 0)
-            // {
-            //     Debug.Log($"⏸️ {gameObject.name}: Oyuncu duruyor, robot da duruyor. (Hareketsiz süre: {playerStationaryTime:F2}s)");
-            // }
+            if (Time.frameCount % 120 == 0)
+            {
+                Debug.Log($"⏸️ {gameObject.name}: Oyuncu duruyor, robot da duruyor. (Hareketsiz süre: {playerStationaryTime:F2}s)");
+            }
             
             // Sadece oyuncuya bak, hareket etme
             RotateTowardsPlayer();

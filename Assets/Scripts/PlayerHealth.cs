@@ -97,11 +97,29 @@ public class PlayerHealth : MonoBehaviour
         
         OnDeath?.Invoke();
         
-        // Ölüm animasyonu
+        // Ölüm animasyonu (eğer Death trigger'ı varsa)
         Animator animator = GetComponent<Animator>();
         if (animator != null)
         {
-            animator.SetTrigger("Death");
+            // Death trigger'ı var mı kontrol et
+            bool hasDeathTrigger = false;
+            foreach (AnimatorControllerParameter param in animator.parameters)
+            {
+                if (param.name == "Death" && param.type == AnimatorControllerParameterType.Trigger)
+                {
+                    hasDeathTrigger = true;
+                    break;
+                }
+            }
+            
+            if (hasDeathTrigger)
+            {
+                animator.SetTrigger("Death");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ Animator'da 'Death' trigger'ı yok! Ölüm animasyonu oynatılamadı.");
+            }
         }
         
         // Respawn'ı başlat

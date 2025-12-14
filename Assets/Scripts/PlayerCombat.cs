@@ -11,7 +11,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float attackCooldown = 1f;
     
     [Tooltip("Saldırı menzili")]
-    [SerializeField] private float attackRange = 2f;
+    [SerializeField] private float attackRange = 5f; // Artırıldı: 2m → 5m
     
     [Tooltip("Saldırı noktası (silahın ucu)")]
     [SerializeField] private Transform attackPoint;
@@ -158,11 +158,98 @@ public class PlayerCombat : MonoBehaviour
         // Silahın hasarını al
         float damage = weaponManager != null ? weaponManager.GetCurrentWeaponDamage() : 5f;
         
-        // Saldırı menzilindeki tüm düşmanları bul
-        Collider[] hitEnemies = Physics.OverlapSphere(attackPoint.position, attackRange);
+        // AttackPoint kontrolü
+        Vector3 attackPosition = attackPoint != null ? attackPoint.position : transform.position;
+        
+        Debug.Log($"⚔️ Saldırı başlatıldı! Hasar: {damage}, Pozisyon: {attackPosition}, Menzil: {attackRange}");
+        
+        // Önce tüm BossController'ları bul (mesafe kontrolü yaparak)
+        BossController[] allBosses = FindObjectsOfType<BossController>();
+        bool bossHit = false;
+        
+        Debug.Log($"🔍 Sahnedeki toplam boss sayısı: {allBosses.Length}");
+        
+        foreach (BossController boss in allBosses)
+        {
+            if (boss == null) continue;
+            
+            // Boss'un pozisyonunu al (collider merkezi veya transform)
+            Vector3 bossPosition = boss.transform.position;
+            
+            // Boss'un collider'ını bul (daha doğru mesafe için)
+            Collider bossCollider = boss.GetComponent<Collider>();
+            if (bossCollider != null)
+            {
+                bossPosition = bossCollider.bounds.center;
+            }
+            
+            float distanceToBoss = Vector3.Distance(attackPosition, bossPosition);
+            Debug.Log($"🔍 Boss kontrolü: {boss.name} | " +
+                     $"Attack Pos: {attackPosition} | " +
+                     $"Boss Pos: {bossPosition} | " +
+                     $"Mesafe: {distanceToBoss:F2}m | " +
+                     $"Menzil: {attackRange}m | " +
+                     $"Hasar: {damage}");
+            
+            if (distanceToBoss <= attackRange)
+            {
+                boss.TakeDamage(damage);
+                Debug.Log($"✅✅✅ Boss'a {damage} hasar verildi! Mesafe: {distanceToBoss:F2}m");
+                bossHit = true;
+                break; // Bir boss'a hasar verildi, diğerlerine geçme
+            }
+            else
+            {
+                Debug.LogWarning($"⚠️ Boss çok uzak! Mesafe: {distanceToBoss:F2}m > Menzil: {attackRange}m");
+            }
+        }
+        
+        // Saldırı menzilindeki tüm düşmanları bul (diğer düşmanlar için)
+        Collider[] hitEnemies = Physics.OverlapSphere(attackPosition, attackRange);
+        
+        Debug.Log($"🎯 {hitEnemies.Length} obje saldırı menzilinde bulundu!");
         
         foreach (Collider enemy in hitEnemies)
         {
+            Debug.Log($"🔍 Kontrol ediliyor: {enemy.name} | Tag: {enemy.tag}");
+            
+            // Boss kontrolü - OverlapSphere'de de kontrol et (daha güvenilir)
+            BossController bossInCollider = enemy.GetComponent<BossController>();
+            if (bossInCollider == null)
+            {
+                // Parent'larda ara
+                Transform parent = enemy.transform.parent;
+                int depth = 0;
+                while (parent != null && depth < 5)
+                {
+                    bossInCollider = parent.GetComponent<BossController>();
+                    if (bossInCollider != null)
+                    {
+                        Debug.Log($"✅ Boss OverlapSphere'de bulundu: {parent.name} (Collider: {enemy.name})");
+                        break;
+                    }
+                    parent = parent.parent;
+                    depth++;
+                }
+            }
+            
+            // Boss bulundu mu?
+            if (bossInCollider != null && !bossHit)
+            {
+                float distanceToBoss = Vector3.Distance(attackPosition, enemy.bounds.center);
+                Debug.Log($"🎯 Boss OverlapSphere'de! Mesafe: {distanceToBoss:F2}m");
+                bossInCollider.TakeDamage(damage);
+                Debug.Log($"✅✅✅ Boss'a OverlapSphere ile {damage} hasar verildi!");
+                bossHit = true;
+                continue; // Boss'a hasar verildi, diğer kontrollere geçme
+            }
+            
+            // Boss zaten kontrol edildi, atla
+            if (bossInCollider != null)
+            {
+                continue;
+            }
+            
             // Dost robot mu kontrol et (EnemyFollower component'i varsa)
             EnemyFollower friendlyRobot = enemy.GetComponent<EnemyFollower>();
             if (friendlyRobot != null)
@@ -181,21 +268,18 @@ public class PlayerCombat : MonoBehaviour
                 continue;
             }
             
-            // Boss'u vurduk mu?
-            BossController boss = enemy.GetComponent<BossController>();
-            if (boss != null)
-            {
-                boss.TakeDamage(damage);
-                Debug.Log($"Boss'a {damage} hasar verildi!");
-            }
-            
-            // EnemyAI'a sahip düşmanları vurduk mu? (gelecekte kullanılabilir)
+            // EnemyAI'a sahip düşmanları vurduk mu?
             EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
             if (enemyAI != null)
             {
                 enemyAI.TakeDamage(damage);
                 Debug.Log($"{enemy.name}'e {damage} hasar verildi!");
             }
+        }
+        
+        if (!bossHit)
+        {
+            Debug.LogWarning($"⚠️ Boss'a hasar verilemedi! Menzil: {attackRange}m, Bulunan obje sayısı: {hitEnemies.Length}");
         }
     }
 

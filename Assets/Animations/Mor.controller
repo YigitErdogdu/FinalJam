@@ -21,7 +21,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -203655887218126122, guid: b92ca0dbd4311ae4a88bb55ca3f39662, type: 3}
+  m_Motion: {fileID: -3100369314251171874, guid: 12e52e465ed793a4d801955e9f964a82, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -83,7 +83,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Boss 1
+  m_Name: Mor
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: Walk
@@ -115,8 +115,7 @@ AnimatorState:
   m_Name: T-Pose@Dual Weapon Combo
   m_Speed: 1
   m_CycleOffset: 0
-  m_Transitions:
-  - {fileID: 9044777856017682457}
+  m_Transitions: []
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
@@ -164,7 +163,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: T-Pose@Strut Walking
+  m_Name: Walk
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
@@ -178,7 +177,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: -203655887218126122, guid: 3a8787b4746d99a47ba40889efa21798, type: 3}
+  m_Motion: {fileID: 7400000, guid: 7d8ff76c34675254c80d2cce2419d53e, type: 2}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

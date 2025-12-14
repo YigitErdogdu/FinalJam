@@ -94,6 +94,15 @@ public class PlayerHealth : MonoBehaviour
     public float GetCurrentHealth() => currentHealth;
     public float GetMaxHealth() => maxHealth;
     public bool IsDead() => isDead;
+    
+    // Canı resetle (respawn için)
+    public void ResetHealth()
+    {
+        currentHealth = maxHealth;
+        isDead = false;
+        lastDamageTime = -999f;
+        Debug.Log($"✅ Oyuncu canı resetlendi! Can: {currentHealth}/{maxHealth}");
+    }
         
     
 }

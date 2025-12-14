@@ -205,18 +205,11 @@ public class WeaponPickup : MonoBehaviour
             // Önce hızları sıfırla (kinematic olmadan önce)
             if (!rb.isKinematic)
             {
-                rb.velocity = Vector3.zero; // Hızı sıfırla
+                rb.linearVelocity = Vector3.zero; // Hızı sıfırla
                 rb.angularVelocity = Vector3.zero; // Açısal hızı sıfırla
             }
             // Sonra kinematic yap
             rb.isKinematic = true;
-        }
-        
-        // Collider'ı kapat
-        Collider weaponCollider = weaponObject.GetComponent<Collider>();
-        if (weaponCollider != null)
-        {
-            weaponCollider.enabled = false;
         }
         
         // Silahı sağ elin child'ı yap
@@ -294,7 +287,7 @@ public class WeaponPickup : MonoBehaviour
             rb.rotation = weaponOriginalRotation;
             
             // Hızları sıfırla
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             
             // Sonra kinematic'i kapat (fizik aktif)

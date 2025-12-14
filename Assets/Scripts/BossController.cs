@@ -254,42 +254,15 @@ public class BossController : MonoBehaviour
         yield return new WaitForSeconds(attackDuration * 0.5f);
         
         // Oyuncuya hasar ver
-        DealDamageToPlayer();
+        //DealDamageToPlayer();
 
         // Saldırı animasyonunun geri kalanını bekle
         yield return new WaitForSeconds(attackDuration * 0.5f);
 
         isAttacking = false;
     }
+
     
-    private void DealDamageToPlayer()
-    {
-        if (player == null)
-        {
-            Debug.LogWarning("Boss: Player null!");
-            return;
-        }
-        
-        // Oyuncu saldırı menzilinde mi?
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
-        
-        if (distanceToPlayer <= attackRange + 1f) // Daha fazla tolerans
-        {
-            PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-            if (playerHealth == null)
-            {
-                // PlayerHealth yoksa otomatik ekle
-                playerHealth = player.gameObject.AddComponent<PlayerHealth>();
-                Debug.Log("✅ Boss: PlayerHealth bulunamadı, otomatik eklendi!");
-            }
-            
-            if (!playerHealth.IsDead())
-            {
-                playerHealth.TakeDamage(attackDamage);
-                Debug.Log($"✅ Boss oyuncuya {attackDamage} hasar verdi! Kalan can: {playerHealth.GetCurrentHealth()}/{playerHealth.GetMaxHealth()}");
-            }
-        }
-    }
 
     private void RotateTowardsPlayer()
     {
@@ -324,184 +297,20 @@ public class BossController : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Die();
+            Destroy(gameObject);
         }
     }
 
-    private void Die()
+    public void OnTriggerEnter(Collider other)
     {
-        isDead = true;
-        currentHealth = 0;
-
-        Debug.Log("Boss öldü! 3 saniye sonra resetlenecek...");
-
-        // NavMeshAgent'ı durdur
-        if (agent != null)
+        if (other.CompareTag("Weapon") && PlayerCombat.instance.isAttacking)
         {
-            agent.isStopped = true;
-            agent.enabled = false;
-        }
-
-        // Ölüm animasyonu (eğer varsa)
-        float deathAnimDuration = 2f;
-        if (animator != null)
-        {
-            animator.SetTrigger("Death"); // Animator'da "Death" trigger'ı olmalı
-            
-            // Animasyon süresini al (eğer Death state'i varsa)
-            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-            if (stateInfo.IsName("Death"))
-            {
-                deathAnimDuration = stateInfo.length;
-            }
-        }
-
-        // Ölüm efekti oynat
-        DeathEffect deathEffect = GetComponent<DeathEffect>();
-        if (deathEffect != null)
-        {
-            deathEffect.PlayDeathEffect(transform.position);
-            deathAnimDuration = deathEffect.GetDeathAnimationDuration();
-        }
-
-        // Collider'ı kapat
-        Collider col = GetComponent<Collider>();
-        if (col != null)
-        {
-            col.enabled = false;
-        }
-
-        // Ölüm animasyonu bitene kadar bekle, sonra resetle
-        float totalDelay = deathAnimDuration + 1f;
-        if (totalDelay > 0 && this != null && gameObject != null)
-        {
-            Invoke(nameof(ResetBoss), totalDelay);
-        }
-        else
-        {
-            // Eğer süre 0 ise veya GameObject yoksa direkt resetle
-            ResetBoss();
+            TakeDamage(10);
         }
     }
+
     
-    private void ResetBoss()
-    {
-        // Eğer GameObject destroy edilmişse çık
-        if (this == null || gameObject == null) return;
-        
-        Debug.Log($"🔴 Boss resetleniyor... Başlangıç pozisyonu: {startPosition}, Şu anki pozisyon: {transform.position}");
-        
-        // Component'leri kapat
-        if (agent != null)
-        {
-            agent.enabled = false;
-        }
-        
-        Collider col = GetComponent<Collider>();
-        if (col != null)
-        {
-            col.enabled = false;
-        }
-        
-        // Pozisyonu ve rotasyonu resetle
-        if (transform != null)
-        {
-            transform.position = startPosition;
-            transform.rotation = startRotation;
-            Debug.Log($"📍 Boss pozisyonu ayarlandı: {transform.position}");
-        }
-        
-        // Canı doldur ve state'i resetle
-        currentHealth = maxHealth;
-        isDead = false;
-        isAttacking = false;
-        lastAttackTime = -999f;
-        currentState = BossState.Idle;
-        
-        // Animator'ı resetle
-        if (animator != null)
-        {
-            animator.Rebind(); // Tüm animasyonları resetle
-            animator.Update(0f); // Hemen güncelle
-        }
-        
-        // Bir frame bekle ve NavMeshAgent'ı ayarla
-        StartCoroutine(EnableBossComponentsAfterFrame(col));
-    }
     
-    private System.Collections.IEnumerator EnableBossComponentsAfterFrame(Collider col)
-    {
-        // Bir frame bekle
-        yield return null;
-        
-        // GameObject hala aktif mi kontrol et
-        if (this == null || gameObject == null || !gameObject.activeInHierarchy)
-        {
-            yield break;
-        }
-        
-        // Pozisyonu tekrar kontrol et
-        if (transform != null && Vector3.Distance(transform.position, startPosition) > 0.1f)
-        {
-            Debug.LogWarning($"⚠️ Boss pozisyonu hala yanlış! Tekrar ayarlanıyor...");
-            if (agent != null)
-            {
-                agent.enabled = false;
-            }
-            transform.position = startPosition;
-            transform.rotation = startRotation;
-            yield return null;
-        }
-        
-        // Component'leri tekrar aktif et
-        if (agent != null)
-        {
-            agent.enabled = true;
-            agent.isStopped = false;
-            
-            // NavMeshAgent için Warp kullan (eğer NavMesh'teyse)
-            if (agent.isOnNavMesh)
-            {
-                agent.Warp(startPosition);
-            }
-        }
-        
-        if (col != null)
-        {
-            col.enabled = true;
-        }
-        
-        // Son kontrol
-        yield return null;
-        if (transform != null)
-        {
-            float distance = Vector3.Distance(transform.position, startPosition);
-            if (distance > 0.5f)
-            {
-                Debug.LogError($"❌ Boss pozisyonu hala yanlış! Mesafe: {distance}. Zorla ayarlanıyor...");
-                if (agent != null)
-                {
-                    agent.enabled = false;
-                }
-                transform.position = startPosition;
-                transform.rotation = startRotation;
-                if (agent != null)
-                {
-                    agent.enabled = true;
-                    if (agent.isOnNavMesh)
-                    {
-                        agent.Warp(startPosition);
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log($"✅ Boss pozisyonu doğru! Mesafe: {distance}");
-            }
-        }
-        
-        Debug.Log($"✅✅✅ Boss başarıyla resetlendi! Final pozisyon: {transform.position}, Hedef: {startPosition}");
-    }
 
     void OnDestroy()
     {

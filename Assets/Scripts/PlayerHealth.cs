@@ -55,21 +55,11 @@ public class PlayerHealth : MonoBehaviour
         // SONRA UI'ı güncelliyoruz (Burası önemli, yer değiştirdi)
         UpdateHealthUI();
 
-        Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+        //Debug.Log($"💔 Oyuncu {damage} hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0)
         {
             Die();
-        }
-    }
-
-    // Enemy tag'ine sahip objelerle çarpışma (Collision)
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            TakeDamage(collisionDamage);
-            Debug.Log($"💥 Enemy ile çarpışma! Hasar: {collisionDamage}");
         }
     }
 
@@ -79,7 +69,7 @@ public class PlayerHealth : MonoBehaviour
         if (other.CompareTag("Enemy"))
         {
             TakeDamage(collisionDamage);
-            Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
+            //Debug.Log($"💥 Enemy trigger'a girdi! Hasar: {collisionDamage}");
         }
     }
 

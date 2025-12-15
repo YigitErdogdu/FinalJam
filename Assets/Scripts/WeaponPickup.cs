@@ -22,10 +22,16 @@ public class WeaponPickup : MonoBehaviour
     [SerializeField] private string weaponTag = "Weapon";
     
     private GameObject currentWeapon;
-    private bool isHaveWeapon;
+    public bool isHaveWeapon;
     private Vector3 weaponOriginalPosition; // Silahın ilk alındığı pozisyon
     private Quaternion weaponOriginalRotation; // Silahın ilk alındığı rotasyon
-    
+    public static WeaponPickup Instance;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
         // Kamera otomatik bul

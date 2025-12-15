@@ -17,6 +17,8 @@ TagManager:
   - Sivri Bicak 2
   - Weapon
   - Guard
+  - Enemy
+  - Guide
   layers:
   - Default
   - TransparentFX

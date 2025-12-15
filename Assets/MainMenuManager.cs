@@ -12,6 +12,13 @@ public class MainMenuManager : MonoBehaviour
     [Header("Menü Ayarlarý")]
     public GameObject howToPlayPaneli; // Yeni Panelimiz
 
+
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible=true;
+    }
+
     public void OyunuBaslat()
     {
         StartCoroutine(SahneYukleVeAnimasyonYap());

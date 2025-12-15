@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class BossController : MonoBehaviour
 {
@@ -33,7 +34,13 @@ public class BossController : MonoBehaviour
     [Header("Health Settings")]
     [Tooltip("Boss'un maksimum canı")]
     [SerializeField] private float maxHealth = 100f;
-    
+
+    [Header("UI")]
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Vector3 healthBarOffset = new Vector3(0, 2.5f, 0);
+
+
+
     private float currentHealth;
     private Vector3 startPosition;
     private Quaternion startRotation;
@@ -52,6 +59,9 @@ public class BossController : MonoBehaviour
     private int animIDWalk;
     private int animIDAttack;
 
+
+    public GameObject door;
+
     void Awake()
     {
         // Awake'te pozisyonu kaydet (en erken)
@@ -66,12 +76,13 @@ public class BossController : MonoBehaviour
 
     void Start()
     {
-        // Otomatik referans bulma
-        if (player == null)
+        UpdateHealthBar();
+        currentHealth = maxHealth;
+
+        if (healthSlider != null)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-                player = playerObj.transform;
+            healthSlider.maxValue = maxHealth;
+            healthSlider.value = currentHealth;
         }
 
         if (animator == null)
@@ -104,6 +115,14 @@ public class BossController : MonoBehaviour
         }
     }
 
+    private void UpdateHealthBar()
+    {
+        if (healthSlider == null) return;
+        healthSlider.value = currentHealth;
+    }
+
+
+
     void Update()
     {
         if (player == null || isDead) return;
@@ -132,6 +151,12 @@ public class BossController : MonoBehaviour
 
     void LateUpdate()
     {
+
+        if (healthSlider != null && Camera.main != null)
+        {
+            healthSlider.transform.parent.LookAt(Camera.main.transform);
+            healthSlider.transform.parent.Rotate(0, 180, 0);
+        }
         // Boss'u ZORLA zeminde tut - HER FRAME
         if (!isDead && transform != null)
         {
@@ -293,14 +318,17 @@ public class BossController : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damage;
-        // Debug.Log($"Boss hasar aldı! Kalan can: {currentHealth}/{maxHealth}");
+        UpdateHealthBar();
 
         if (currentHealth <= 0)
         {
             Die();
+            door.SetActive(true);
         }
     }
-    
+
+
+
     // Boss ölümü - tamamen yok olacak
     private void Die()
     {
@@ -330,14 +358,17 @@ public class BossController : MonoBehaviour
         {
             deathEffect.PlayDeathEffect(transform.position);
         }
-        
+
+        if (healthSlider != null)
+            healthSlider.gameObject.SetActive(false);
+
         // Boss'u tamamen yok et
         Destroy(gameObject, 0.5f); // 0.5 saniye sonra yok et (animasyon için)
     }
 
     public void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Weapon") && PlayerCombat.instance != null && PlayerCombat.instance.isAttacking)
+        if (other.CompareTag("Weapon"))
         {
             TakeDamage(10);
         }

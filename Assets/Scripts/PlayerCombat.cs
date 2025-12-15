@@ -62,6 +62,7 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
+        if (!WeaponPickup.Instance.isHaveWeapon) return;
         // Ölüyse saldırma
         PlayerHealth playerHealth = GetComponent<PlayerHealth>();
         if (playerHealth != null && playerHealth.IsDead())

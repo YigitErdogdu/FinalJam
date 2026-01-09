@@ -1,17 +1,17 @@
-[![Oyna]([OYUNUN ADI: 10THLIGHTYEAR]
+OYUNUN ADI: 10THLIGHTYEAR
 # ELYSIAN MIGHT
 
 > **Elysian Might ekibi tarafından Unity ile geliştirilmiş 3D Action-RPG projesi.**
 
 ## 🚀 Proje Hakkında ve Geliştirme Süreci
-Bu proje, **[BALIKESIR TEKNOKENT/GAME JAM II]** tarafından düzenlenen yoğun oyun geliştirme eğitimi sonrasında ortaya çıkmıştır.
+Bu proje, **BALIKESIR TEKNOKENT/GAME JAM II** tarafından düzenlenen yoğun oyun geliştirme eğitimi sonrasında ortaya çıkmıştır.
 Eğitim sürecinde edindiğimiz teorik bilgileri (Unity motoru, C# mimarisi, Oyun Tasarımı), 3 kişilik ekibimizle bir araya gelerek pratiğe döktük ve **Elysian Might** evrenini yarattık.
 
 Amacımız, takım çalışması (collaborative work) ile sürdürülebilir bir kod yapısı kurmak ve keyifli bir oynanış deneyimi sunmaktır.
 ---
 
 ## 🙏 Teşekkür (Acknowledgments)
-Bu projeyi hayata geçirmemizde büyük emeği olan, bize oyun geliştirme vizyonu katan **[BALIKESIR TEKNOKENT]** ailesine ve değerli eğitmenlerimize; teknik rehberlikleri ve destekleri için sonsuz teşekkürlerimizi sunarız.
+Bu projeyi hayata geçirmemizde büyük emeği olan, bize oyun geliştirme vizyonu katan **BALIKESIR TEKNOKENT** ailesine ve değerli eğitmenlerimize; teknik rehberlikleri ve destekleri için sonsuz teşekkürlerimizi sunarız.
 
 ---
 
@@ -36,7 +36,7 @@ Proje sürecinde görev dağılımımız uzmanlık alanlarımıza göre şu şek
 [![Oyna](https://yigiterdogdu.itch.io/10th-lightyear)]
 
 ## 📖 Proje Özeti
-Bu proje, **[GAME JAM II]** kapsamında geliştirilmiştir. Oyunun temel mekaniği [HIZLI REFLEKSLER] üzerine kuruludur.
+Bu proje, **GAME JAM II** kapsamında geliştirilmiştir. Oyunun temel mekaniği HIZLI REFLEKSLER üzerine kuruludur.
 Oyuncu, [HİKAYE/AMAÇ:ZİNDANDAN KAÇMAYA ÇALIŞAN BİR MAHKUMU KONTROL EDER].
 
 ### 📸 Ekran Görüntüleri
